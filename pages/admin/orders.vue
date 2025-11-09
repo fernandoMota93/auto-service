@@ -50,9 +50,69 @@
       <b-col cols="12" md="8">
         <b-card>
           <h5>Ordens existentes</h5>
+          <b-row class="mb-3">
+            <b-col md="3" class="mb-3">
+              <b-form-datepicker v-model="filters.startDate" placeholder="Data inicial"></b-form-datepicker>
+            </b-col>
+
+            <b-col md="3" class="mb-3">
+              <b-form-datepicker v-model="filters.endDate" placeholder="Data final"></b-form-datepicker>
+            </b-col>
+
+            <b-col md="3" class="mb-3">
+              <b-form-select v-model="filters.status" :options="statusOptions" />
+            </b-col>
+
+            <b-col md="3" class="mb-3">
+              <b-button variant="primary" @click="loadOrders">Filtrar</b-button>
+            </b-col>
+          </b-row>
+          <b-table striped small responsive show-empty :items="filteredOrders" :fields="fields">
+            <template #empty>
+              <b-alert variant="info" show>
+                <p class="p-1">
+                  Não existe OS para o período.
+                </p>
+              </b-alert>
+            </template>
+            <template #cell(actions)="item">
+              <Actions :item="item.item" />
+            </template>
+            <template #cell(client_id)="item">
+              {{ clientName(item.item.client_id) }}
+            </template>
+            <template #cell(status)="item">
+              <b-badge :variant="formatOrderStatus(item.item.status).color">
+
+                {{ formatOrderStatus(item.item.status).label }}
+              </b-badge>
+            </template>
+            <template #cell(services)="item">
+              <div v-if="item.item.services && item.item.services.length">
+
+                <ul class="list-unstyled mb-2">
+                  <li v-for="(s, idx) in item.item.services" :key="idx" class="d-flex justify-content-between">
+                    <span>{{ s.name }} - </span>
+                    <span> <strong>R$ {{ Number(s.value).toFixed(2) }}</strong></span>
+                    <hr>
+                  </li>
+                </ul>
+              </div>
+            </template>
+            <template #cell(total)="item">
+              R$ {{ total(item.item).toFixed(2) }}
+            </template>
+
+            <template #cell(created_at)="item">
+              {{ formatFirebaseDate(item.item.created_at) }}
+            </template>
+
+          </b-table>
+          <b-pagination v-model="currentPage" :total-rows="totalOrders" :per-page="perPage" align="center" size="sm"
+            class="mt-2" @change="loadOrders" />
           <div v-if="filteredOrders.length === 0" class="text-muted">Nenhuma ordem</div>
           <b-row>
-            <b-col md="6" v-for="o in filteredOrders" :key="o.id" class="mb-3">
+            <b-col cols="12" md="6" v-for="o in filteredOrders" :key="o.id" class="mb-3">
               <b-card>
                 <h6>{{ o.description }}</h6>
                 <p>Cliente: {{ clientName(o.client_id) }}</p>
@@ -120,13 +180,32 @@ import orderService from '~/services/orderService'
 import orderStatusMixin from '~/mixins/orderStatusMixin'
 import jsPDF from 'jspdf'
 import timbradoUrl from '@/assets/images/timbrado.png'
+import Actions from './components/actions.vue'
+import mixinShared from '../../mixins/mixinShared'
 
 export default {
-  mixins: [orderStatusMixin],
+  mixins: [orderStatusMixin, mixinShared],
 
   data() {
     return {
+      filters: {
+        startDate: null,
+        endDate: null,
+        status: "all",
+      },
+        statusOptions: [
+        { value: "all", text: "Todos" },
+        { value: "open", text: "Pendente" },
+        { value: "in_progress", text: "Em andamento" },
+        { value: "done", text: "Concluído" },
+        { value: "canceled", text: "Cancelado" },
+        { value: "on_hold", text: "Em espera" },
+      ],
       osToDelete: null,
+      totalOrders: 0,
+      currentPage: 1,
+      perPage: 50,
+      loading: false,
       clients: [],
       vehicles: [],
       clientOptions: [],
@@ -135,8 +214,21 @@ export default {
       form: { client_id: null, vehicle_id: null, description: '', services: [{ name: '', value: 0 }] },
       files: [],
       imageToDelete: null,
-      imageOrderId: null
+      imageOrderId: null,
+      fields: [
+        { key: 'actions', label: 'Ações' },
+        { key: 'client_id', label: 'Cliente' },
+        { key: 'description', label: 'Descrição' },
+        { key: 'status', label: 'Estado da OS' },
+        { key: 'services', label: 'Serviços' },
+        { key: 'created_at', label: 'Aberto em', sortable: true },
+        { key: 'total', label: 'Valor Serviço' },
+      ]
     }
+  },
+
+  components: {
+    Actions
   },
 
   computed: {
@@ -150,7 +242,8 @@ export default {
     const snap = await db.collection('users').get()
     this.clients = snap.docs.map(d => ({ id: d.id, ...d.data() }))
     this.clientOptions = this.clients.map(c => ({ value: c.id, text: `${c.name} (${c.email})` }))
-    this.loadOrders()
+
+    await this.loadOrders(1)
   },
 
   methods: {
@@ -163,8 +256,13 @@ export default {
       return order.services.reduce((acc, s) => acc + (Number(s.value) || 0), 0)
     },
 
-    async loadOrders() {
-      this.orders = await orderService.listAll()
+    async loadOrders(page = this.currentPage) {
+      //this.orders = await orderService.listAll()
+
+      const { data, total } = await orderService.listPaginated(this.perPage, this.currentPage, this.filters);
+      this.orders = data
+      this.totalOrders = total
+      this.currentPage = page
     },
 
     clientName(id) {
