@@ -54,7 +54,10 @@
       <div class="main flex-fill d-flex flex-column">
         <!-- Navbar superior -->
         <b-navbar type="light" variant="light" class="border-bottom shadow-sm">
-          <b-container fluid class="d-flex justify-content-between align-items-center">
+          <b-container
+            fluid
+            class="d-flex justify-content-between align-items-center"
+          >
             <b-button
               size="sm"
               variant="outline-secondary"
@@ -69,7 +72,10 @@
             </b-navbar-brand>
 
             <div class="d-flex align-items-center">
-              <span v-if="$store.state.user.profile" class="mr-2 text-muted small">
+              <span
+                v-if="$store.state.user.profile"
+                class="mr-2 text-muted small"
+              >
                 {{ $store.state.user.profile.name }}
               </span>
               <b-button
@@ -94,7 +100,8 @@
     <!-- Footer global sticky -->
     <footer class="footer bg-light border-top text-center py-2">
       <small>
-        © {{ new Date().getFullYear() }} {{ appName }} - Todos os direitos reservados
+        © {{ new Date().getFullYear() }} {{ appName }} - Todos os direitos
+        reservados
       </small>
     </footer>
   </div>
@@ -107,58 +114,62 @@ export default {
       appName: this.$config.APP_NAME || 'Grilo Auto-Service',
       sidebarVisible: false,
       isMobile: false,
-      menu: [] // vai ser populado dinamicamente no mounted
-    }
+      menu: [], // vai ser populado dinamicamente no mounted
+    };
   },
   computed: {
     currentPageTitle() {
-      const found = this.menu.find(m => this.$route.path.startsWith(m.to))
-      return found ? found.label : this.appName
+      const found = this.menu.find((m) => this.$route.path.startsWith(m.to));
+      return found ? found.label : this.appName;
     },
     userRole() {
-      return this.$store.state.user.profile?.role || 'user'
-    }
+      return this.$store.state.user.profile?.role || 'user';
+    },
   },
   mounted() {
-    this.checkMobile()
-    window.addEventListener('resize', this.checkMobile)
-    this.setMenuByRole()
+    this.checkMobile();
+    window.addEventListener('resize', this.checkMobile);
+    this.setMenuByRole();
   },
   beforeDestroy() {
-    window.removeEventListener('resize', this.checkMobile)
+    window.removeEventListener('resize', this.checkMobile);
   },
   methods: {
     logout() {
-      this.$store.dispatch('user/logout')
-      this.$router.push('/')
+      this.$store.dispatch('user/logout');
+      this.$router.push('/');
     },
     checkMobile() {
-      this.isMobile = window.innerWidth < 992
+      this.isMobile = window.innerWidth < 992;
     },
     toggleSidebar() {
-      this.sidebarVisible = !this.sidebarVisible
+      this.sidebarVisible = !this.sidebarVisible;
     },
     setMenuByRole() {
       // Menu base comum
       const baseMenu = [
         { label: 'Dashboard', to: '/dashboard', icon: 'speedometer2' },
-        { label: 'Minhas OS', to: '/dashboard/orders/orders', icon: 'clipboard-data' },
+        {
+          label: 'Minhas OS',
+          to: '/dashboard/orders/orders',
+          icon: 'clipboard-data',
+        },
         { label: 'Veículos', to: '/dashboard/vehicle', icon: 'truck' },
-        { label: 'Perfil', to: '/dashboard/profile', icon: 'person' }
-      ]
+        // { label: 'Perfil', to: '/dashboard/profile', icon: 'person' }
+      ];
 
       // Menu admin adicional
       const adminMenu = [
         { label: 'Clientes', to: '/admin/clients', icon: 'people' },
         { label: 'Gerir OS', to: '/admin/orders', icon: 'card-checklist' },
-        { label: 'Configurações', to: '/dashboard/settings', icon: 'gear' }
-      ]
+        { label: 'Configurações', to: '/dashboard/settings', icon: 'gear' },
+      ];
 
-      this.menu = this.userRole === 'admin' ? [...baseMenu, ...adminMenu] : baseMenu
-    }
-  }
-}
-
+      this.menu =
+        this.userRole === 'admin' ? [...baseMenu, ...adminMenu] : baseMenu;
+    },
+  },
+};
 </script>
 
 <style scoped>
