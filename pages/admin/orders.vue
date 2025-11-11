@@ -1,144 +1,41 @@
 <template>
   <div>
     <b-row>
-      <!-- Formulário de criação -->
-      <b-col cols="12" md="4">
-        <b-card>
-          <h5>Criar Nova OS</h5>
-          <b-form @submit.prevent="create">
-            <b-form-group label="Cliente">
-              <b-form-select
-                v-model="form.client_id"
-                :options="clientOptions"
-                required
-              />
-            </b-form-group>
-
-            <b-form-group label="Veículo (opcional)">
-              <b-form-select
-                v-model="form.vehicle_id"
-                :options="vehicleOptions"
-              />
-            </b-form-group>
-
-            <b-form-group label="Descrição">
-              <b-form-textarea v-model="form.description" rows="3" required />
-            </b-form-group>
-
-            <div>
-              <h6>Serviços</h6>
-              <div
-                v-for="(s, idx) in form.services"
-                :key="idx"
-                class="d-flex mb-2"
-              >
-                <b-form-input
-                  v-model="s.name"
-                  placeholder="Serviço"
-                  class="mr-2"
-                  required
-                />
-                <b-form-input
-                  v-model.number="s.value"
-                  placeholder="Valor"
-                  type="number"
-                  class="mr-2"
-                  required
-                />
-                <b-button size="sm" variant="danger" @click="removeService(idx)"
-                  >X</b-button
-                >
-              </div>
-              <b-button
-                class="mt-3"
-                size="sm"
-                variant="secondary"
-                @click="addService"
-                >Adicionar serviço</b-button
-              >
-            </div>
-
-            <b-form-group label="Upload de imagens (até 4)">
-              <b-form-file
-                multiple
-                accept="image/*"
-                @change="handleFiles"
-              ></b-form-file>
-              <div class="mt-2 d-flex flex-wrap">
-                <div
-                  v-for="(img, idx) in files"
-                  :key="idx"
-                  class="position-relative mr-2 mb-2"
-                >
-                  <b-img
-                    :src="img.preview"
-                    thumbnail
-                    fluid
-                    style="max-width: 100px"
-                  />
-                  <b-button
-                    size="sm"
-                    variant="danger"
-                    class="position-absolute"
-                    style="top: 2px; right: 2px; padding: 0 4px"
-                    @click="removeFile(idx)"
-                  >
-                    X
-                  </b-button>
-                </div>
-              </div>
-            </b-form-group>
-
-            <b-button type="submit" variant="primary">Criar OS</b-button>
-          </b-form>
-        </b-card>
-      </b-col>
 
       <!-- Lista de Ordens -->
-      <b-col cols="12" md="8">
+      <b-col cols="12">
         <b-card>
           <h5>Ordens existentes</h5>
-          <b-row class="mb-3">
-            <b-col md="3" class="mb-3">
-              <b-form-datepicker
-                v-model="filters.startDate"
-                placeholder="Data inicial"
-              ></b-form-datepicker>
-            </b-col>
-
-            <b-col md="3" class="mb-3">
-              <b-form-datepicker
-                v-model="filters.endDate"
-                placeholder="Data final"
-              ></b-form-datepicker>
-            </b-col>
-
-            <b-col md="3" class="mb-3">
-              <b-form-select
-                v-model="filters.status"
-                :options="statusOptions"
-              />
-            </b-col>
-
-            <b-col md="3" class="mb-3">
-              <b-button variant="primary" @click="loadOrders">Filtrar</b-button>
+          <b-row class="mb-3 ">
+            <b-col cols="12" class="text-right">
+              <b-button variant="success" @click="createOS">+ Criar Nova OS</b-button>
             </b-col>
           </b-row>
-          <b-table
-            striped
-            small
-            responsive
-            show-empty
-            :items="filteredOrders"
-            :fields="fields"
-          >
+          <b-row class="mb-3">
+            <b-col md="3" class="mb-3">
+              <b-form-datepicker v-model="filters.startDate" placeholder="Data inicial"></b-form-datepicker>
+            </b-col>
+
+            <b-col md="3" class="mb-3">
+              <b-form-datepicker v-model="filters.endDate" placeholder="Data final"></b-form-datepicker>
+            </b-col>
+
+            <b-col md="3" class="mb-3">
+              <b-form-select v-model="filters.status" :options="statusOptions" />
+            </b-col>
+
+            <b-col md="3" class="mb-3">
+              <b-button variant="primary" block @click="loadOrders">Filtrar</b-button>
+            </b-col>
+          </b-row>
+          <b-table striped small responsive show-empty :items="filteredOrders" :fields="fields">
             <template #empty>
               <b-alert variant="info" show>
                 <p class="p-1">Não existe OS para o período.</p>
               </b-alert>
             </template>
             <template #cell(actions)="item">
-              <Actions @view="viewOS" :item="item.item" />
+              <Actions @view="viewOS" @edit="editOS" @delete="promptDeleteOS" :item="item.item" />
             </template>
             <template #cell(client_id)="item">
               {{ clientName(item.item.client_id) }}
@@ -151,15 +48,10 @@
             <template #cell(services)="item">
               <div v-if="item.item.services && item.item.services.length">
                 <ul class="list-unstyled mb-2">
-                  <li
-                    v-for="(s, idx) in item.item.services"
-                    :key="idx"
-                    class="d-flex justify-content-between"
-                  >
+                  <li v-for="(s, idx) in item.item.services" :key="idx" class="d-flex justify-content-between">
                     <span>{{ s.name }} - </span>
                     <span>
-                      <strong>R$ {{ Number(s.value).toFixed(2) }}</strong></span
-                    >
+                      <strong>R$ {{ Number(s.value).toFixed(2) }}</strong></span>
                     <hr />
                   </li>
                 </ul>
@@ -173,15 +65,8 @@
               {{ formatFirebaseDate(item.item.created_at) }}
             </template>
           </b-table>
-          <b-pagination
-            v-model="currentPage"
-            :total-rows="totalOrders"
-            :per-page="perPage"
-            align="center"
-            size="sm"
-            class="mt-2"
-            @change="loadOrders"
-          />
+          <b-pagination v-model="currentPage" :total-rows="totalOrders" :per-page="perPage" align="center" size="sm"
+            class="mt-2" @change="loadOrders" />
           <div v-if="filteredOrders.length === 0" class="text-muted">
             Nenhuma ordem
           </div>
@@ -278,30 +163,61 @@
     </b-row>
 
     <!-- Modal de confirmação de exclusão -->
-    <b-modal
-      id="confirm-delete-modal"
-      ref="confirmDeleteModal"
-      title="Confirmar exclusão"
-      ok-title="Sim"
-      cancel-title="Cancelar"
-      @ok="confirmDeleteImage"
-    >
+    <b-modal id="confirm-delete-modal" ref="confirmDeleteModal" title="Confirmar exclusão" ok-title="Sim"
+      cancel-title="Cancelar" @ok="confirmDeleteImage">
       <p>Tem certeza que deseja remover esta imagem?</p>
     </b-modal>
     <!-- Modal de confirmação de exclusão da OS -->
-    <b-modal
-      id="confirm-delete-os-modal"
-      ref="confirmDeleteOSModal"
-      title="Confirmar exclusão"
-      ok-title="Sim"
-      cancel-title="Cancelar"
-      @ok="confirmDeleteOS"
-    >
+    <b-modal id="confirm-delete-os-modal" ref="confirmDeleteOSModal" title="Confirmar exclusão" ok-title="Sim"
+      cancel-title="Cancelar" @ok="confirmDeleteOS">
       <p>Tem certeza que deseja excluir esta OS?</p>
     </b-modal>
 
     <b-modal size="lg" title="Visualizar OS" v-model="viewOSModal" hide-footer>
       <_id :id="osId" />
+    </b-modal>
+
+    <b-modal size="lg" :title="editable ? 'Editar OS' : 'Criar OS'" v-model="launchModal">
+      <b-card>
+        <b-form @submit.prevent="create">
+          <b-form-group label="Cliente">
+            <b-form-select v-model="form.client_id" :options="clientOptions" required />
+          </b-form-group>
+
+          <b-form-group label="Veículo (opcional)">
+            <b-form-select v-model="form.vehicle_id" :options="vehicleOptions" />
+          </b-form-group>
+
+          <b-form-group label="Descrição">
+            <b-form-textarea v-model="form.description" rows="3" required />
+          </b-form-group>
+
+          <div>
+            <h6>Serviços</h6>
+            <div v-for="(s, idx) in form.services" :key="idx" class="d-flex mb-2">
+              <b-form-input v-model="s.name" placeholder="Serviço" class="mr-2" required />
+              <b-form-input v-model.number="s.value" placeholder="Valor" type="number" class="mr-2" required />
+              <b-button size="sm" variant="danger" @click="removeService(idx)">X</b-button>
+            </div>
+            <b-button class="mt-3" size="sm" variant="secondary" @click="addService">Adicionar serviço</b-button>
+          </div>
+
+          <b-form-group label="Upload de imagens (até 4)">
+            <b-form-file multiple accept="image/*" @change="handleFiles"></b-form-file>
+            <div class="mt-2 d-flex flex-wrap">
+              <div v-for="(img, idx) in files" :key="idx" class="position-relative mr-2 mb-2">
+                <b-img :src="img.preview || img.url" thumbnail fluid style="max-width: 100px" />
+                <b-button size="sm" variant="danger" class="position-absolute"
+                  style="top: 2px; right: 2px; padding: 0 4px" @click="removeFile(idx)">
+                  X
+                </b-button>
+              </div>
+            </div>
+          </b-form-group>
+
+          <b-button type="submit" variant="primary">Criar OS</b-button>
+        </b-form>
+      </b-card>
     </b-modal>
   </div>
 </template>
@@ -322,6 +238,8 @@ export default {
   data() {
     return {
       viewOSModal: false,
+      launchModal: false,
+      editable: false,
       osId: '',
       filters: {
         startDate: null,
@@ -391,12 +309,43 @@ export default {
   },
 
   methods: {
+    createOS() {
+      this.editable = false;
+      this.launchModal = true;
+
+      this.form = {
+        client_id: null,
+        vehicle_id: null,
+        description: null,
+        services: null,
+      }
+
+      this.files = []
+    },
     viewOS(item) {
       this.osId = item.id;
       this.viewOSModal = true;
     },
-    promptDeleteOS(id) {
-      this.osToDelete = id;
+    editOS(item) {
+      console.log(item)
+      this.launchModal = true;
+      this.editable = true;
+
+      this.form = {
+        client_id: item.client_id,
+        vehicle_id: item.vehicle_id,
+        description: item.description,
+        services: item.services,
+      }
+
+      this.files = (item.images || []).map(url => ({
+        preview: url,   // usado para exibir no modal
+        url,            // usado para saber se é imagem existente
+        file: null      // diferencia das novas
+      }));
+    },
+    promptDeleteOS(item) {
+      this.osToDelete = item.id;
       this.$refs.confirmDeleteOSModal.show();
     },
     total(order) {
