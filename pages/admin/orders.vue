@@ -65,6 +65,27 @@
               {{ formatFirebaseDate(item.item.created_at) }}
             </template>
           </b-table>
+
+          <!-- Contadores no final da tabela -->
+          <b-row class="mt-3 pt-3 border-top" v-if="filteredOrders.length > 0">
+            <b-col cols="12" class="d-flex justify-content-end">
+              <div class="summary-cards">
+                <b-card class="summary-card mr-2">
+                  <div class="text-center">
+                    <div class="summary-label">Total de OS</div>
+                    <div class="summary-value text-primary">{{ filteredOrders.length }}</div>
+                  </div>
+                </b-card>
+                <b-card class="summary-card">
+                  <div class="text-center">
+                    <div class="summary-label">Total dos Serviços</div>
+                    <div class="summary-value text-success">R$ {{ totalServicesValue.toFixed(2) }}</div>
+                  </div>
+                </b-card>
+              </div>
+            </b-col>
+          </b-row>
+
           <b-pagination v-model="currentPage" :total-rows="totalOrders" :per-page="perPage" align="center" size="sm"
             class="mt-2" @change="loadOrders" />
           <div v-if="filteredOrders.length === 0" class="text-muted">
@@ -295,6 +316,13 @@ export default {
       // Ignora OS soft deleted
       return this.orders.filter((o) => !o.deleted_at);
     },
+    
+    // Novo computed para calcular o total dos serviços
+    totalServicesValue() {
+      return this.filteredOrders.reduce((total, order) => {
+        return total + this.total(order);
+      }, 0);
+    }
   },
 
   async mounted() {
@@ -610,3 +638,41 @@ export default {
   },
 };
 </script>
+
+<style scoped>
+.summary-cards {
+  display: flex;
+  gap: 1rem;
+}
+
+.summary-card {
+  min-width: 150px;
+  padding: 0.75rem;
+  border: 1px solid #e9ecef;
+}
+
+.summary-label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #6c757d;
+  margin-bottom: 0.25rem;
+}
+
+.summary-value {
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+/* Responsividade para mobile */
+@media (max-width: 576px) {
+  .summary-cards {
+    flex-direction: column;
+    width: 100%;
+  }
+  
+  .summary-card {
+    min-width: auto;
+    width: 100%;
+  }
+}
+</style>
