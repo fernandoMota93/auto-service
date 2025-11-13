@@ -37,6 +37,16 @@
     >
       <b-icon icon="download"></b-icon>
     </b-button>
+
+     <b-button
+      v-if="type === 'client'"
+      variant="outline-info"
+      size="sm"
+      class="ml-2"
+      @click="$emit('recoverPassword', item)"
+    >
+     <b-icon icon="envelope"></b-icon>
+    </b-button>
   </div>
 </template>
 
