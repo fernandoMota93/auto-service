@@ -15,5 +15,8 @@ export default {
       created_at: new Date()
     })
     return res
+  },
+    async recoverPassword(email) {
+    return auth.sendPasswordResetEmail(email)
   }
 }

@@ -116,12 +116,7 @@
               </b-button>
 
               <div class="text-center mt-4">
-                <p class="mb-2 text-muted">
-                  Ainda não tem conta?
-                  <nuxt-link to="/register" class="text-decoration-none">
-                    Cadastre-se
-                  </nuxt-link>
-                </p>
+               
                 <nuxt-link
                   to="/forgot-password"
                   class="text-decoration-none small"
