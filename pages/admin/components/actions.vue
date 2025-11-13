@@ -1,8 +1,8 @@
 <template>
   <div class="d-flex align-items-center">
-
     <!-- Botões de ação -->
-       <b-button
+    <b-button
+      v-if="type != 'client'"
       variant="outline-info"
       size="sm"
       class="ml-2"
@@ -29,6 +29,7 @@
     </b-button>
 
     <b-button
+      v-if="type != 'client'"
       variant="outline-success"
       size="sm"
       class="ml-2"
@@ -45,10 +46,14 @@ export default {
   props: {
     item: {
       type: Object,
-      required: true
-    }
-  }
-}
+      required: true,
+    },
+    type: {
+      type: String,
+      required: false,
+    },
+  },
+};
 </script>
 
 <style scoped>
