@@ -5,12 +5,24 @@
       <b-button variant="primary" @click="openCreateModal">Novo Cliente</b-button>
     </div>
 
+    <!-- Campo de pesquisa -->
+    <b-row class="mb-3">
+      <b-col cols="12" md="4">
+        <b-form-input v-model="search" placeholder="Pesquisar cliente pelo nome..."
+          @input="debounceSearch"></b-form-input>
+      </b-col>
+    </b-row>
+
+    <!-- Tabela -->
     <b-table :items="clients" :fields="fields" hover small responsive bordered>
       <template #cell(actions)="item">
         <Actions @edit="openEditModal" @delete="openDeleteModal" @recoverPassword="sendRecoverEmail" :item="item.item"
-          :type="'client'" />
+          type="client" />
       </template>
     </b-table>
+    <b-pagination v-model="currentPage" :total-rows="totalClients" :per-page="perPage" align="center" size="sm"
+      class="mt-3" @input="onPageChange" />
+
 
     <!-- Modal Criar/Editar -->
     <b-modal id="client-modal" v-model="showModal" :title="isEditing ? 'Editar Cliente' : 'Novo Cliente'"
@@ -36,21 +48,26 @@
 <script>
 import clientService from '~/services/clientService';
 import Actions from './components/actions.vue';
-import authService from "@/services/authService";
-
+import authService from '@/services/authService';
 
 export default {
-  components: {
-    Actions,
-  },
+  components: { Actions },
+
   data() {
     return {
       clients: [],
+      currentPage: 1,
+      perPage: 50,
+      totalClients: 0,
+      search: "",
+      debounceTimer: null,
+
       fields: [
         { key: 'actions', label: 'Ações' },
         { key: 'name', label: 'Nome' },
         { key: 'email', label: 'Email' },
       ],
+
       showModal: false,
       showDeleteModal: false,
       isEditing: false,
@@ -64,8 +81,34 @@ export default {
   },
 
   methods: {
+    onPageChange(page) {
+      this.currentPage = page;
+      this.loadClients();
+    },
+
     async loadClients() {
-      this.clients = await clientService.getAll();
+      const result = await clientService.listPaginated(
+        this.perPage,
+        this.currentPage,
+        this.search
+      );
+
+      console.log('result', result)
+
+      this.clients = result.data;
+      this.totalClients = result.total;
+    },
+
+
+    debounceSearch() {
+      clearTimeout(this.debounceTimer);
+
+      this.debounceTimer = setTimeout(async () => {
+        if (this.search.length >= 3 || this.search.length === 0) {
+          this.currentPage = 1;
+          await this.loadClients();
+        }
+      }, 400);
     },
 
     openCreateModal() {
@@ -97,12 +140,12 @@ export default {
     },
 
     async confirmDelete() {
-      await clientService.remove(this.selected.id);
+      await clientService.remove(this.selected);
       this.showDeleteModal = false;
       await this.loadClients();
     },
+
     async sendRecoverEmail(val) {
-      console.log('val',val)
       this.message = null;
       this.error = null;
       this.loading = true;
@@ -110,17 +153,12 @@ export default {
       try {
         await authService.recoverPassword(val.email);
 
-        this.message =
-          "Se este e-mail estiver cadastrado, o cliente receberá um link para redefinir sua senha.";
-
-        // ✅ Toast de sucesso
         this.$bvToast.toast('E-mail de recuperação enviado com sucesso!', {
           title: 'Sucesso',
           variant: 'success',
           solid: true,
-          autoHideDelay: 4000
+          autoHideDelay: 4000,
         });
-
       } catch (err) {
         const map = {
           "auth/user-not-found": "E-mail não encontrado.",
@@ -129,19 +167,16 @@ export default {
 
         this.error = map[err.code] || "Erro ao enviar e-mail de recuperação.";
 
-        // ❌ Toast de erro
         this.$bvToast.toast(this.error, {
           title: 'Erro',
           variant: 'danger',
           solid: true,
-          autoHideDelay: 5000
+          autoHideDelay: 5000,
         });
-
       } finally {
         this.loading = false;
       }
-    }
-
+    },
   },
 };
 </script>
