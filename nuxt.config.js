@@ -1,37 +1,39 @@
 export default {
   ssr: false,
-  target: 'static',
+  target: "static",
   head: {
-    title: 'Grilo Mecânica',
+    title: "Grilo Mecânica",
     meta: [
-    { charset: 'utf-8' },
-    { name: 'viewport', content: 'width=device-width, initial-scale=1' },
-    { hid: 'description', name: 'description', content: 'Sistema de gestão da Grilo Auto Service' }
-  ],
+      { charset: "utf-8" },
+      { name: "viewport", content: "width=device-width, initial-scale=1" },
+      {
+        hid: "description",
+        name: "description",
+        content: "Sistema de gestão da Grilo Auto Service",
+      },
+    ],
   },
-css: [
-  'bootstrap/dist/css/bootstrap.css',
-  'bootstrap-vue/dist/bootstrap-vue.css'
-],
+  css: [
+    "bootstrap/dist/css/bootstrap.css",
+    "bootstrap-vue/dist/bootstrap-vue.css",
+  ],
   plugins: [
-    '~/plugins/firebase.js',
-    '~/plugins/auth.js'
+    "~/plugins/firebase.js",
+    "~/plugins/auth.js",
+    "~/plugins/v-money.js",
   ],
   components: true,
-  modules: [
-    '@nuxtjs/dotenv',
-    'bootstrap-vue/nuxt'
-  ],
+  modules: ["@nuxtjs/dotenv", "bootstrap-vue/nuxt"],
   router: {
-    middleware: ['auth']
+    middleware: ["auth"],
   },
   bootstrapVue: {
-  bootstrapCSS: false, // evita duplicação de CSS
-  bootstrapVueCSS: false,
-  icons: true
-},
-  publicRuntimeConfig: {
-    APP_NAME: process.env.APP_NAME || 'Grilo Mecânica'
+    bootstrapCSS: false, // evita duplicação de CSS
+    bootstrapVueCSS: false,
+    icons: true,
   },
-  build: {}
-}
+  publicRuntimeConfig: {
+    APP_NAME: process.env.APP_NAME || "Grilo Mecânica",
+  },
+  build: {},
+};

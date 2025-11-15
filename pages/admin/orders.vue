@@ -7,93 +7,63 @@
           <h5>Ordens existentes</h5>
           <b-row class="mb-3">
             <b-col cols="12" class="text-right">
-              <b-button variant="success" @click="createOS"
-                >+ Criar Nova OS</b-button
-              >
+              <b-button variant="success" @click="createOS">+ Criar Nova OS</b-button>
             </b-col>
           </b-row>
           <b-row class="mb-3">
-            <b-col md="3" class="mb-3">
-              <b-form-datepicker
-                v-model="filters.startDate"
-                placeholder="Data inicial"
-              ></b-form-datepicker>
+            <!-- APENAS UMA DATA AGORA -->
+            <b-col md="4" class="mb-3">
+              <b-form-datepicker v-model="filters.selectedDate" placeholder="Selecione uma data"></b-form-datepicker>
             </b-col>
 
-            <b-col md="3" class="mb-3">
-              <b-form-datepicker
-                v-model="filters.endDate"
-                placeholder="Data final"
-              ></b-form-datepicker>
+            <b-col md="4" class="mb-3">
+              <b-form-select v-model="filters.status" :options="statusOptions" />
             </b-col>
 
-            <b-col md="3" class="mb-3">
-              <b-form-select
-                v-model="filters.status"
-                :options="statusOptions"
-              />
-            </b-col>
-
-            <b-col md="3" class="mb-3">
-              <b-button variant="primary" block @click="loadOrders"
-                >Filtrar</b-button
-              >
+            <b-col md="4" class="mb-3">
+              <b-button variant="primary" block @click="onFilter">Filtrar</b-button>
+              <b-button variant="outline-secondary" block @click="clearFilters" class="mt-1">Limpar</b-button>
             </b-col>
           </b-row>
-          <b-table
-            striped
-            small
-            responsive
-            show-empty
-            :items="filteredOrders"
-            :fields="fields"
-          >
-            <template #empty>
-              <b-alert variant="info" show>
-                <p class="p-1">Não existe OS para o período.</p>
-              </b-alert>
-            </template>
-            <template #cell(actions)="item">
-              <Actions
-                @view="viewOS"
-                @edit="editOS"
-                @delete="promptDeleteOS"
-                :item="item.item"
-              />
-            </template>
-            <template #cell(client_id)="item">
-              {{ clientName(item.item.client_id) }}
-            </template>
-            <template #cell(status)="item">
-              <b-badge :variant="formatOrderStatus(item.item.status).color">
-                {{ formatOrderStatus(item.item.status).label }}
-              </b-badge>
-            </template>
-            <template #cell(services)="item">
-              <div v-if="item.item.services && item.item.services.length">
-                <ul class="list-unstyled mb-2">
-                  <li
-                    v-for="(s, idx) in item.item.services"
-                    :key="idx"
-                    class="d-flex justify-content-between"
-                  >
-                    <span>{{ s.name }} - </span>
-                    <span>
-                      <strong>R$ {{ Number(s.value).toFixed(2) }}</strong></span
-                    >
-                    <hr />
-                  </li>
-                </ul>
-              </div>
-            </template>
-            <template #cell(total)="item">
-              R$ {{ total(item.item).toFixed(2) }}
-            </template>
+          <b-row style="max-height: 90vh; overflow-y: auto;">
+            <b-table striped small responsive show-empty :items="paginatedOrders" :fields="fields">
+              <template #empty>
+                <b-alert variant="info" show>
+                  <p class="p-1">Não existe OS para o período.</p>
+                </b-alert>
+              </template>
+              <template #cell(actions)="item">
+                <Actions @view="viewOS" @edit="editPromptOS" @delete="promptDeleteOS" :item="item.item" />
+              </template>
+              <template #cell(client_id)="item">
+                {{ clientName(item.item.client_id) }}
+              </template>
+              <template #cell(status)="item">
+                <b-badge :variant="formatOrderStatus(item.item.status).color">
+                  {{ formatOrderStatus(item.item.status).label }}
+                </b-badge>
+              </template>
+              <template #cell(services)="item">
+                <div v-if="item.item.services && item.item.services.length">
+                  <ul class="list-unstyled mb-2">
+                    <li v-for="(s, idx) in item.item.services" :key="idx" class="d-flex justify-content-between">
+                      <span>{{ s.name }} - </span>
+                      <span>
+                        <strong>R$ {{ Number(s.value).toFixed(2) }}</strong></span>
+                      <hr />
+                    </li>
+                  </ul>
+                </div>
+              </template>
+              <template #cell(total)="item">
+                R$ {{ total(item.item).toFixed(2) }}
+              </template>
 
-            <template #cell(created_at)="item">
-              {{ formatFirebaseDate(item.item.created_at) }}
-            </template>
-          </b-table>
+              <template #cell(created_at)="item">
+                {{ formatFirebaseDate(item.item.created_at) }}
+              </template>
+            </b-table>
+          </b-row>
 
           <!-- Contadores no final da tabela -->
           <b-row class="mt-3 pt-3 border-top" v-if="filteredOrders.length > 0">
@@ -119,130 +89,23 @@
             </b-col>
           </b-row>
 
-          <b-pagination
-            v-model="currentPage"
-            :total-rows="totalOrders"
-            :per-page="perPage"
-            align="center"
-            size="sm"
-            class="mt-2"
-            @change="loadOrders"
-          />
+          <b-pagination v-model="currentPage" :total-rows="totalOrders" :per-page="perPage" align="center" size="sm"
+            class="mt-2" @change="onPageChange" />
           <div v-if="filteredOrders.length === 0" class="text-muted">
             Nenhuma ordem
           </div>
-
-          <!-- <b-row>
-            <b-col
-              cols="12"
-              md="6"
-              v-for="o in filteredOrders"
-              :key="o.id"
-              class="mb-3"
-            >
-              <b-card>
-                <h6>{{ o.description }}</h6>
-                <p>Cliente: {{ clientName(o.client_id) }}</p>
-                <b-badge :variant="formatOrderStatus(o.status).color">
-                  {{ formatOrderStatus(o.status).label }}
-                </b-badge>
-
-                <div v-if="o.services && o.services.length">
-                  <h6>Serviços</h6>
-                  <ul class="list-unstyled mb-2">
-                    <li
-                      v-for="(s, idx) in o.services"
-                      :key="idx"
-                      class="d-flex justify-content-between"
-                    >
-                      <span>{{ s.name }}</span>
-                      <span>R$ {{ Number(s.value).toFixed(2) }}</span>
-                    </li>
-                  </ul>
-                </div>
-
-                <p>
-                  <strong>Valor total: R$ {{ total(o).toFixed(2) }}</strong>
-                </p>
-
-                <div
-                  v-if="o.images && o.images.length"
-                  class="d-flex flex-wrap"
-                >
-                  <div
-                    v-for="(img, idx) in o.images"
-                    :key="idx"
-                    class="position-relative mr-2 mb-2"
-                  >
-                    <img
-                      :src="img"
-                      class="img-thumbnail"
-                      style="max-width: 120px"
-                    />
-                    <b-button
-                      size="sm"
-                      variant="danger"
-                      class="position-absolute"
-                      style="top: 2px; right: 2px; padding: 0 4px"
-                      @click="promptDeleteImage(o.id, img)"
-                    >
-                      X
-                    </b-button>
-                  </div>
-                </div>
-
-                <div class="mt-2 d-flex justify-content-between">
-                  <div>
-                    <b-button
-                      size="sm"
-                      variant="success"
-                      @click="setStatus(o.id, 'in_progress')"
-                      >Iniciar</b-button
-                    >
-                    <b-button
-                      size="sm"
-                      variant="primary"
-                      @click="setStatus(o.id, 'done')"
-                      >Concluir</b-button
-                    >
-                    <b-button
-                      size="sm"
-                      variant="danger"
-                      @click="promptDeleteOS(o.id)"
-                      >Excluir</b-button
-                    >
-                  </div>
-                  <b-button size="sm" variant="success" @click="exportPDF(o)"
-                    ><b-icon icon="printer"></b-icon
-                  ></b-button>
-                </div>
-              </b-card>
-            </b-col>
-          </b-row> -->
         </b-card>
       </b-col>
     </b-row>
 
-    <!-- Modal de confirmação de exclusão -->
-    <b-modal
-      id="confirm-delete-modal"
-      ref="confirmDeleteModal"
-      title="Confirmar exclusão"
-      ok-title="Sim"
-      cancel-title="Cancelar"
-      @ok="confirmDeleteImage"
-    >
+    <!-- Modais (mantidos iguais) -->
+    <b-modal id="confirm-delete-modal" ref="confirmDeleteModal" title="Confirmar exclusão" ok-title="Sim"
+      cancel-title="Cancelar" @ok="confirmDeleteImage">
       <p>Tem certeza que deseja remover esta imagem?</p>
     </b-modal>
-    <!-- Modal de confirmação de exclusão da OS -->
-    <b-modal
-      id="confirm-delete-os-modal"
-      ref="confirmDeleteOSModal"
-      title="Confirmar exclusão"
-      ok-title="Sim"
-      cancel-title="Cancelar"
-      @ok="confirmDeleteOS"
-    >
+
+    <b-modal id="confirm-delete-os-modal" ref="confirmDeleteOSModal" title="Confirmar exclusão" ok-title="Sim"
+      cancel-title="Cancelar" @ok="confirmDeleteOS">
       <p>Tem certeza que deseja excluir esta OS?</p>
     </b-modal>
 
@@ -250,98 +113,67 @@
       <_id :id="osId" />
     </b-modal>
 
-    <b-modal
-      size="lg"
-      :title="editable ? 'Editar OS' : 'Criar OS'"
-      v-model="launchModal"
-      hide-footer
-    >
+    <b-modal size="lg" :title="editable ? 'Editar OS' : 'Criar OS'" v-model="launchModal" hide-footer>
       <b-card>
-        <b-form @submit.prevent="create">
+        <b-form @submit.prevent="handlerSubmit">
           <b-form-group label="Cliente">
-            <b-form-select
-              v-model="form.client_id"
-              :options="clientOptions"
-              required
-            />
+            <b-form-select v-model="form.client_id" :options="clientOptions" required />
           </b-form-group>
 
           <b-form-group label="Veículo (opcional)">
-            <b-form-select
-              v-model="form.vehicle_id"
-              :options="vehicleOptions"
-            />
+            <b-form-select v-model="form.vehicle_id" :options="vehicleOptions" />
           </b-form-group>
 
           <b-form-group label="Descrição">
             <b-form-textarea v-model="form.description" rows="3" required />
           </b-form-group>
 
+          <b-form-group label="Status da OS">
+            <b-form-select v-model="form.status" :options="statusOptions.filter(s => s.value !== 'all')" />
+          </b-form-group>
+
           <div>
             <h6>Serviços</h6>
-            <div
-              v-for="(s, idx) in form.services"
-              :key="idx"
-              class="d-flex mb-2"
-            >
-              <b-form-input
-                v-model="s.name"
-                placeholder="Serviço"
-                class="mr-2"
-                required
+            <div v-for="(s, idx) in form.services" :key="idx" class="d-flex mb-2 align-items-center">
+              <b-form-input 
+                v-model="s.name" 
+                placeholder="Serviço" 
+                class="mr-2" 
+                required 
               />
-              <b-form-input
-                v-model.number="s.value"
-                placeholder="Valor"
-                type="number"
-                class="mr-2"
-                required
+              <b-form-input 
+                v-model="s.value" 
+                placeholder="Valor" 
+                class="mr-2 input-money"
+                v-money="moneyConfig"
               />
-              <b-button size="sm" variant="danger" @click="removeService(idx)"
-                >X</b-button
-              >
+              <b-button size="sm" variant="danger" @click="removeService(idx)">X</b-button>
             </div>
-            <b-button
-              class="mt-3"
-              size="sm"
-              variant="secondary"
-              @click="addService"
-              >Adicionar serviço</b-button
-            >
+            <b-button class="mt-3" size="sm" variant="secondary" @click="addService">Adicionar serviço</b-button>
           </div>
 
           <b-form-group label="Upload de imagens (até 4)">
-            <b-form-file
-              multiple
-              accept="image/*"
-              @change="handleFiles"
-            ></b-form-file>
+            <b-form-file multiple accept="image/*" @change="handleFiles"></b-form-file>
             <div class="mt-2 d-flex flex-wrap">
-              <div
-                v-for="(img, idx) in files"
-                :key="idx"
-                class="position-relative mr-2 mb-2"
-              >
-                <b-img
-                  :src="img.preview || img.url"
-                  thumbnail
-                  fluid
-                  style="max-width: 100px"
-                />
-                <b-button
-                  size="sm"
-                  variant="danger"
-                  class="position-absolute"
-                  style="top: 2px; right: 2px; padding: 0 4px"
-                  @click="removeFile(idx)"
-                >
+              <div v-for="(img, idx) in files" :key="idx" class="position-relative mr-2 mb-2">
+                <b-img :src="img.preview || img.url" thumbnail fluid style="max-width: 100px" />
+                <b-button size="sm" variant="danger" class="position-absolute"
+                  style="top: 2px; right: 2px; padding: 0 4px" @click="removeFile(idx)">
                   X
                 </b-button>
               </div>
             </div>
           </b-form-group>
 
-          <b-button type="submit" variant="primary">Criar OS</b-button>
+          <b-button type="submit" variant="primary" :disabled="isSubmitting">
+            <span v-if="isSubmitting">
+              <b-spinner small class="mr-1"></b-spinner>
+              Aguarde...
+            </span>
+            <span v-else>
+              {{ editable ? 'Atualizar' : 'Criar OS' }}
+            </span>
+          </b-button>
         </b-form>
       </b-card>
     </b-modal>
@@ -366,10 +198,10 @@ export default {
       viewOSModal: false,
       launchModal: false,
       editable: false,
+      isSubmitting: false,
       osId: '',
       filters: {
-        startDate: null,
-        endDate: null,
+        selectedDate: new Date().toISOString().split('T')[0],
         status: 'all',
       },
       statusOptions: [
@@ -383,18 +215,21 @@ export default {
       osToDelete: null,
       totalOrders: 0,
       currentPage: 1,
-      perPage: 50,
+      perPage: 10,
       loading: false,
       clients: [],
       vehicles: [],
       clientOptions: [],
       vehicleOptions: [],
-      orders: [],
+      allOrders: [],
+      filteredOrders: [],
+      paginatedOrders: [],
       form: {
         client_id: null,
         vehicle_id: null,
         description: '',
         services: [{ name: '', value: 0 }],
+        status: 'open',
       },
       files: [],
       imageToDelete: null,
@@ -408,6 +243,14 @@ export default {
         { key: 'created_at', label: 'Aberto em', sortable: true },
         { key: 'total', label: 'Valor Serviço' },
       ],
+      moneyConfig: {
+        decimal: ',',
+        thousands: '.',
+        prefix: 'R$ ',
+        suffix: '',
+        precision: 2,
+        masked: false
+      },
     };
   },
 
@@ -416,15 +259,18 @@ export default {
     _id,
   },
 
-  computed: {
-    filteredOrders() {
-      // Ignora OS soft deleted
-      return this.orders.filter((o) => !o.deleted_at);
+  watch: {
+    'form.client_id': function () {
+      this.onClientChange();
     },
+    currentPage: function () {
+      this.updatePagination();
+    }
+  },
 
-    // Novo computed para calcular o total dos serviços
+  computed: {
     totalServicesValue() {
-      return this.filteredOrders.reduce((total, order) => {
+      return this.paginatedOrders.reduce((total, order) => {
         return total + this.total(order);
       }, 0);
     },
@@ -438,10 +284,244 @@ export default {
       text: `${c.name} (${c.email})`,
     }));
 
-    await this.loadOrders(1);
+    await this.loadAllOrders();
   },
 
   methods: {
+    // Carrega todos os orders uma vez
+    async loadAllOrders() {
+      try {
+        this.loading = true;
+        this.allOrders = await orderService.listAll();
+        this.applyFilters();
+      } catch (error) {
+        console.error('Erro ao carregar orders:', error);
+        this.$bvToast.toast('Erro ao carregar ordens de serviço', {
+          title: 'Erro',
+          variant: 'danger',
+          solid: true,
+        });
+      } finally {
+        this.loading = false;
+      }
+    },
+
+    // FILTRO SIMPLIFICADO - APENAS UMA DATA
+    applyFilters() {
+      let filtered = this.allOrders.filter(order => !order.deleted_at);
+
+      // Filtro por status
+      if (this.filters.status && this.filters.status !== 'all') {
+        filtered = filtered.filter(order => order.status === this.filters.status);
+      }
+
+      // FILTRO POR DATA ÚNICA - SIMPLES
+      if (this.filters.selectedDate) {
+        const selectedDate = new Date(this.filters.selectedDate);
+        const nextDay = new Date(selectedDate);
+        nextDay.setDate(nextDay.getDate() + 1);
+
+        filtered = filtered.filter(order => {
+          const orderDate = this.getOrderDate(order.created_at);
+          return orderDate >= selectedDate && orderDate < nextDay;
+        });
+      }
+
+      this.filteredOrders = filtered;
+      this.totalOrders = filtered.length;
+      this.updatePagination();
+    },
+
+    // Converte created_at para Date object
+    getOrderDate(created_at) {
+      try {
+        if (!created_at) return new Date(0);
+
+        if (created_at.toDate && typeof created_at.toDate === 'function') {
+          return created_at.toDate();
+        }
+
+        if (created_at.seconds) {
+          return new Date(created_at.seconds * 1000);
+        }
+
+        if (typeof created_at === 'string' || typeof created_at === 'number') {
+          const date = new Date(created_at);
+          return isNaN(date.getTime()) ? new Date(0) : date;
+        }
+
+        if (created_at instanceof Date) {
+          return created_at;
+        }
+
+        return new Date(0);
+      } catch (error) {
+        console.warn('Erro ao converter data:', created_at, error);
+        return new Date(0);
+      }
+    },
+
+    // Atualiza os dados paginados
+    updatePagination() {
+      const startIndex = (this.currentPage - 1) * this.perPage;
+      const endIndex = startIndex + this.perPage;
+      this.paginatedOrders = this.filteredOrders.slice(startIndex, endIndex);
+    },
+
+    // Handler para mudança de página
+    onPageChange(page) {
+      this.currentPage = page;
+      this.updatePagination();
+    },
+
+    // Handler para aplicar filtros
+    onFilter() {
+      this.currentPage = 1;
+      this.applyFilters();
+
+      if (this.filters.selectedDate) {
+        this.$bvToast.toast(`Filtro aplicado para ${new Date(this.filters.selectedDate).toLocaleDateString('pt-BR')}`, {
+          title: 'Filtro',
+          variant: 'info',
+          solid: true,
+          autoHideDelay: 2000
+        });
+      }
+    },
+
+    // Limpar filtros
+    clearFilters() {
+      this.filters = {
+        selectedDate: null,
+        status: 'all',
+      };
+      this.currentPage = 1;
+      this.applyFilters();
+
+      this.$bvToast.toast('Filtros limpos', {
+        title: 'Sucesso',
+        variant: 'info',
+        solid: true,
+      });
+    },
+
+    handlerSubmit() {
+      if (this.editable) {
+        this.editOS();
+      } else {
+        this.create();
+      }
+    },
+
+    // Método para converter string monetária para número
+    convertMoneyToNumber(moneyString) {
+      if (!moneyString) return 0;
+      
+      // Remove "R$ ", pontos e converte vírgula para ponto
+      const cleaned = moneyString
+        .replace('R$ ', '')
+        .replace(/\./g, '')
+        .replace(',', '.');
+      
+      return parseFloat(cleaned) || 0;
+    },
+
+    // Método para preparar os dados antes de salvar
+    prepareFormData() {
+      const formData = { ...this.form };
+      
+      // Converte os valores monetários para número
+      formData.services = formData.services.map(service => ({
+        ...service,
+        value: this.convertMoneyToNumber(service.value)
+      }));
+      
+      return formData;
+    },
+
+    // Método para formatar números existentes para formato monetário
+    formatNumberToMoney(number) {
+      if (!number && number !== 0) return 'R$ 0,00';
+      
+      return new Intl.NumberFormat('pt-BR', {
+        style: 'currency',
+        currency: 'BRL'
+      }).format(number);
+    },
+
+    // Formata valores existentes quando editar
+    formatExistingValues(services) {
+      return services.map(service => ({
+        ...service,
+        value: this.formatNumberToMoney(service.value)
+      }));
+    },
+
+    async editOS() {
+      if (this.isSubmitting) return;
+      this.isSubmitting = true;
+
+      try {
+        if (!this.form.client_id) {
+          this.$bvToast.toast('Selecione um cliente.', {
+            title: 'Erro',
+            variant: 'danger',
+            solid: true,
+          });
+          return;
+        }
+
+        const formData = this.prepareFormData();
+        
+        const updatedData = {
+          client_id: formData.client_id,
+          vehicle_id: formData.vehicle_id || null,
+          description: formData.description,
+          services: formData.services.filter(s => s.name),
+          status: formData.status,
+        };
+
+        await orderService.update(this.osId, updatedData);
+
+        const keptOldImages = this.files
+          .filter(f => !f.file)
+          .map(f => f.url);
+
+        const newFiles = this.files.filter(f => f.file);
+
+        const existingImages = (await orderService.listByUser(this.form.client_id))
+          .find(order => order.id === this.osId)?.images || [];
+
+        const removedImages = existingImages.filter(url => !keptOldImages.includes(url));
+
+        for (const url of removedImages) {
+          await orderService.deleteImage(this.osId, url);
+        }
+
+        for (const f of newFiles) {
+          await orderService.uploadImage(this.osId, f.file);
+        }
+
+        this.$bvToast.toast('OS atualizada com sucesso!', {
+          title: 'Sucesso',
+          variant: 'success',
+          solid: true,
+        });
+
+        this.launchModal = false;
+        await this.loadAllOrders();
+
+      } catch (error) {
+        this.$bvToast.toast(error.message || 'Erro ao atualizar OS', {
+          title: 'Erro',
+          variant: 'danger',
+          solid: true,
+        });
+      } finally {
+        this.isSubmitting = false;
+      }
+    },
+
     createOS() {
       this.editable = false;
       this.launchModal = true;
@@ -450,53 +530,46 @@ export default {
         client_id: null,
         vehicle_id: null,
         description: null,
-        services: [{ name: '', value: 0 }],
+        services: [{ name: '', value: 'R$ 0,00' }],
+        status: 'open',
       };
 
       this.files = [];
     },
+
     viewOS(item) {
       this.osId = item.id;
       this.viewOSModal = true;
     },
-    editOS(item) {
-      console.log(item);
+
+    editPromptOS(item) {
       this.launchModal = true;
       this.editable = true;
+      this.osId = item.id;
 
       this.form = {
         client_id: item.client_id,
         vehicle_id: item.vehicle_id,
         description: item.description,
-        services: item.services,
+        services: this.formatExistingValues(item.services),
+        status: item.status,
       };
 
       this.files = (item.images || []).map((url) => ({
-        preview: url, // usado para exibir no modal
-        url, // usado para saber se é imagem existente
-        file: null, // diferencia das novas
+        preview: url,
+        url,
+        file: null,
       }));
     },
+
     promptDeleteOS(item) {
       this.osToDelete = item.id;
       this.$refs.confirmDeleteOSModal.show();
     },
+
     total(order) {
       if (!order.services || !Array.isArray(order.services)) return 0;
       return order.services.reduce((acc, s) => acc + (Number(s.value) || 0), 0);
-    },
-
-    async loadOrders(page = this.currentPage) {
-      //this.orders = await orderService.listAll()
-
-      const { data, total } = await orderService.listPaginated(
-        this.perPage,
-        this.currentPage,
-        this.filters
-      );
-      this.orders = data;
-      this.totalOrders = total;
-      this.currentPage = page;
     },
 
     clientName(id) {
@@ -508,8 +581,9 @@ export default {
       if (!Array.isArray(this.form.services)) {
         this.form.services = [];
       }
-      this.form.services.push({ name: '', value: 0 });
+      this.form.services.push({ name: '', value: 'R$ 0,00' });
     },
+
     removeService(idx) {
       this.form.services.splice(idx, 1);
     },
@@ -549,6 +623,9 @@ export default {
     },
 
     async create() {
+      if (this.isSubmitting) return;
+      this.isSubmitting = true;
+
       try {
         if (!this.form.client_id) {
           this.$bvToast.toast('Selecione um cliente.', {
@@ -559,49 +636,50 @@ export default {
           return;
         }
 
+        const formData = this.prepareFormData();
+        
         const adminUid = this.$store.state.user.currentUser.uid;
         const order = {
-          client_id: this.form.client_id,
-          vehicle_id: this.form.vehicle_id || null,
-          description: this.form.description,
-          services: this.form.services.filter((s) => s.name),
-          user_id: this.form.client_id,
+          client_id: formData.client_id,
+          vehicle_id: formData.vehicle_id || null,
+          description: formData.description,
+          services: formData.services.filter((s) => s.name),
+          user_id: formData.client_id,
           created_by: adminUid,
+          status: formData.status,
+          created_at: new Date(),
         };
 
         const res = await orderService.create(order);
-        this.launchModal = false;
 
         for (const f of this.files) {
           await orderService.uploadImage(res.id, f.file);
         }
 
-        await this.loadOrders();
-        this.form = {
-          client_id: null,
-          vehicle_id: null,
-          description: '',
-          services: [{ name: '', value: 0 }],
-        };
-        this.files = [];
+        await this.loadAllOrders();
 
         this.$bvToast.toast('OS criada com sucesso!', {
           title: 'Sucesso',
           variant: 'success',
           solid: true,
         });
+
+        this.launchModal = false;
+
       } catch (e) {
         this.$bvToast.toast(`Erro ao criar OS: ${e.message}`, {
           title: 'Erro',
           variant: 'danger',
           solid: true,
         });
+      } finally {
+        this.isSubmitting = false;
       }
     },
 
     async setStatus(id, status) {
-      await orderService.update(id, { status });
-      await this.loadOrders();
+      await orderService.updateStatus(id, { status });
+      await this.loadAllOrders();
     },
 
     async confirmDeleteOS() {
@@ -613,7 +691,7 @@ export default {
           variant: 'success',
           solid: true,
         });
-        await this.loadOrders();
+        await this.loadAllOrders();
       } catch (e) {
         this.$bvToast.toast(`Erro ao excluir OS: ${e.message}`, {
           title: 'Erro',
@@ -625,7 +703,6 @@ export default {
       }
     },
 
-    // Exclusão de imagem existente
     promptDeleteImage(orderId, img) {
       this.imageToDelete = img;
       this.imageOrderId = orderId;
@@ -641,7 +718,7 @@ export default {
           variant: 'success',
           solid: true,
         });
-        await this.loadOrders();
+        await this.loadAllOrders();
       } catch (e) {
         this.$bvToast.toast(`Erro ao remover imagem: ${e.message}`, {
           title: 'Erro',
@@ -654,7 +731,6 @@ export default {
       }
     },
 
-    // Função para gerar PDF
     async exportPDF(o) {
       const doc = new jsPDF({
         orientation: 'portrait',
@@ -674,26 +750,32 @@ export default {
 
       let y = 50;
       doc.setFontSize(11);
-      doc.text(`Cliente: ${o.clientName || '-'}`, 20, y);
+      doc.text(`Cliente: ${this.clientName(o.client_id)}`, 20, y);
       y += 7;
-      doc.text(`Veículo: ${o.vehicle || '-'}`, 20, y);
+      doc.text(`Veículo: ${o.vehicle_id || '-'}`, 20, y);
       y += 7;
-      doc.text(`Placa: ${o.plate || '-'}`, 20, y);
-      y += 7;
-      doc.text(`Telefone: ${o.phone || '-'}`, 20, y);
+      doc.text(`Descrição: ${o.description || '-'}`, 20, y);
       y += 10;
 
       doc.setFont('helvetica', 'bold');
       doc.text('Serviço(s) executado(s):', 20, y);
       y += 7;
       doc.setFont('helvetica', 'normal');
-      const textLines = doc.splitTextToSize(o.description || '—', 170);
-      doc.text(textLines, 20, y);
-      y += textLines.length * 6 + 10;
 
-      const valor = o.services
-        ? o.services.reduce((s, it) => s + (it.value || 0), 0)
-        : 0;
+      if (o.services && o.services.length) {
+        o.services.forEach(service => {
+          const serviceText = `${service.name} - R$ ${Number(service.value).toFixed(2)}`;
+          doc.text(serviceText, 20, y);
+          y += 5;
+        });
+      } else {
+        doc.text('Nenhum serviço registrado', 20, y);
+        y += 5;
+      }
+
+      y += 5;
+
+      const valor = this.total(o);
       doc.setFont('helvetica', 'bold');
       doc.text('Valor total:', 20, y);
       doc.setFont('helvetica', 'normal');
@@ -738,12 +820,17 @@ export default {
         reader.readAsDataURL(blob);
       });
     },
-  },
 
-  watch: {
-    'form.client_id': function () {
-      this.onClientChange();
-    },
+    formatFirebaseDate(date) {
+      if (!date) return '-';
+      try {
+        const dateObj = this.getOrderDate(date);
+        return dateObj.toLocaleDateString('pt-BR');
+      } catch (error) {
+        console.warn('Erro ao formatar data:', date, error);
+        return '-';
+      }
+    }
   },
 };
 </script>
@@ -770,6 +857,12 @@ export default {
 .summary-value {
   font-size: 1.25rem;
   font-weight: 600;
+}
+
+/* Estilo para o campo de money */
+.input-money {
+  text-align: right;
+  font-weight: 500;
 }
 
 /* Responsividade para mobile */

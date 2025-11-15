@@ -57,9 +57,6 @@ export default {
 
   async listPaginated(perPage, page, search) {
 
-    console.log('page',page)
-    console.log('perPage',perPage)
-    console.log('search',search)
 
     if (!this._cursors) this._cursors = [];
 
@@ -70,7 +67,7 @@ export default {
 
     // 🔍 Se estiver pesquisando
     if (search.length >= 3) {
-      const key = search.toLowerCase();
+      const key = search
       query = query
         .where("name", ">=", key)
         .where("name", "<=", key + "\uf8ff");
