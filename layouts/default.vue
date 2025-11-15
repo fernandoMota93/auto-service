@@ -148,7 +148,7 @@ export default {
     setMenuByRole() {
       // Menu base comum
       const baseMenu = [
-        { label: 'Dashboard', to: '/dashboard', icon: 'speedometer2' },
+       // { label: 'Dashboard', to: '/dashboard', icon: 'speedometer2' },
         {
           label: 'Minhas OS',
           to: '/dashboard/orders/orders',
@@ -162,7 +162,7 @@ export default {
       const adminMenu = [
         { label: 'Clientes', to: '/admin/clients', icon: 'people' },
         { label: 'Gerir OS', to: '/admin/orders', icon: 'card-checklist' },
-        { label: 'Configurações', to: '/dashboard/settings', icon: 'gear' },
+       // { label: 'Configurações', to: '/dashboard/settings', icon: 'gear' },
       ];
 
       this.menu =

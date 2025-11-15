@@ -164,7 +164,7 @@ export default {
         
         const profile = this.$store.state.user.profile
         if (profile && profile.role === 'admin') {
-          this.$router.push('/admin')
+          this.$router.push('/admin/orders')
         } else {
           this.$router.push('/dashboard')
         }

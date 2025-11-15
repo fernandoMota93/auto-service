@@ -21,6 +21,7 @@ export default {
     "~/plugins/firebase.js",
     "~/plugins/auth.js",
     "~/plugins/v-money.js",
+    '~/plugins/v-mask.js'
   ],
   components: true,
   modules: ["@nuxtjs/dotenv", "bootstrap-vue/nuxt"],

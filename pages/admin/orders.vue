@@ -11,16 +11,21 @@
             </b-col>
           </b-row>
           <b-row class="mb-3">
-            <!-- APENAS UMA DATA AGORA -->
-            <b-col md="4" class="mb-3">
+            <!-- FILTROS -->
+            <b-col md="3" class="mb-3">
               <b-form-datepicker v-model="filters.selectedDate" placeholder="Selecione uma data"></b-form-datepicker>
             </b-col>
 
-            <b-col md="4" class="mb-3">
+            <b-col md="3" class="mb-3">
               <b-form-select v-model="filters.status" :options="statusOptions" />
             </b-col>
 
-            <b-col md="4" class="mb-3">
+            <b-col md="3" class="mb-3">
+             
+              <v-select v-model="filters.client_id" :options="clientFilterOptions" label="text" :reduce="(option) => option.value" placeholder="Filtrar por cliente" />
+            </b-col>
+
+            <b-col md="3" class="mb-3">
               <b-button variant="primary" block @click="onFilter">Filtrar</b-button>
               <b-button variant="outline-secondary" block @click="clearFilters" class="mt-1">Limpar</b-button>
             </b-col>
@@ -135,18 +140,8 @@
           <div>
             <h6>Serviços</h6>
             <div v-for="(s, idx) in form.services" :key="idx" class="d-flex mb-2 align-items-center">
-              <b-form-input 
-                v-model="s.name" 
-                placeholder="Serviço" 
-                class="mr-2" 
-                required 
-              />
-              <b-form-input 
-                v-model="s.value" 
-                placeholder="Valor" 
-                class="mr-2 input-money"
-                v-money="moneyConfig"
-              />
+              <b-form-input v-model="s.name" placeholder="Serviço" class="mr-2" required />
+              <b-form-input v-model="s.value" placeholder="Valor" class="mr-2 input-money" v-money="moneyConfig" />
               <b-button size="sm" variant="danger" @click="removeService(idx)">X</b-button>
             </div>
             <b-button class="mt-3" size="sm" variant="secondary" @click="addService">Adicionar serviço</b-button>
@@ -189,6 +184,8 @@ import timbradoUrl from '@/assets/images/timbrado.png';
 import Actions from './components/actions.vue';
 import mixinShared from '../../mixins/mixinShared';
 import _id from '../dashboard/orders/_id.vue';
+import vSelect from 'vue-select';
+import 'vue-select/dist/vue-select.css';
 
 export default {
   mixins: [orderStatusMixin, mixinShared],
@@ -203,6 +200,7 @@ export default {
       filters: {
         selectedDate: new Date().toISOString().split('T')[0],
         status: 'all',
+        client_id: null, // NOVO FILTRO POR CLIENTE
       },
       statusOptions: [
         { value: 'all', text: 'Todos' },
@@ -257,6 +255,7 @@ export default {
   components: {
     Actions,
     _id,
+    vSelect
   },
 
   watch: {
@@ -273,6 +272,17 @@ export default {
       return this.paginatedOrders.reduce((total, order) => {
         return total + this.total(order);
       }, 0);
+    },
+
+    // NOVO: Opções para o filtro de clientes
+    clientFilterOptions() {
+      return [
+        { value: null, text: 'Todos os clientes' },
+        ...this.clients.map((c) => ({
+          value: c.id,
+          text: `${c.name} (${c.email})`,
+        }))
+      ];
     },
   },
 
@@ -306,7 +316,7 @@ export default {
       }
     },
 
-    // FILTRO SIMPLIFICADO - APENAS UMA DATA
+    // FILTRO ATUALIZADO COM CLIENTE
     applyFilters() {
       let filtered = this.allOrders.filter(order => !order.deleted_at);
 
@@ -315,7 +325,12 @@ export default {
         filtered = filtered.filter(order => order.status === this.filters.status);
       }
 
-      // FILTRO POR DATA ÚNICA - SIMPLES
+      // NOVO: Filtro por cliente
+      if (this.filters.client_id) {
+        filtered = filtered.filter(order => order.client_id === this.filters.client_id);
+      }
+
+      // Filtro por data
       if (this.filters.selectedDate) {
         const selectedDate = new Date(this.filters.selectedDate);
         const nextDay = new Date(selectedDate);
@@ -379,21 +394,38 @@ export default {
       this.currentPage = 1;
       this.applyFilters();
 
+      let message = 'Filtro aplicado';
+
       if (this.filters.selectedDate) {
-        this.$bvToast.toast(`Filtro aplicado para ${new Date(this.filters.selectedDate).toLocaleDateString('pt-BR')}`, {
-          title: 'Filtro',
-          variant: 'info',
-          solid: true,
-          autoHideDelay: 2000
-        });
+        message += ` para ${new Date(this.filters.selectedDate).toLocaleDateString('pt-BR')}`;
       }
+
+      if (this.filters.client_id) {
+        const client = this.clients.find(c => c.id === this.filters.client_id);
+        if (client) {
+          message += ` - Cliente: ${client.name}`;
+        }
+      }
+
+      if (this.filters.status && this.filters.status !== 'all') {
+        const statusText = this.statusOptions.find(s => s.value === this.filters.status)?.text;
+        message += ` - Status: ${statusText}`;
+      }
+
+      this.$bvToast.toast(message, {
+        title: 'Filtro',
+        variant: 'info',
+        solid: true,
+        autoHideDelay: 3000
+      });
     },
 
-    // Limpar filtros
+    // Limpar filtros ATUALIZADO
     clearFilters() {
       this.filters = {
         selectedDate: null,
         status: 'all',
+        client_id: null,
       };
       this.currentPage = 1;
       this.applyFilters();
@@ -416,33 +448,33 @@ export default {
     // Método para converter string monetária para número
     convertMoneyToNumber(moneyString) {
       if (!moneyString) return 0;
-      
+
       // Remove "R$ ", pontos e converte vírgula para ponto
       const cleaned = moneyString
         .replace('R$ ', '')
         .replace(/\./g, '')
         .replace(',', '.');
-      
+
       return parseFloat(cleaned) || 0;
     },
 
     // Método para preparar os dados antes de salvar
     prepareFormData() {
       const formData = { ...this.form };
-      
+
       // Converte os valores monetários para número
       formData.services = formData.services.map(service => ({
         ...service,
         value: this.convertMoneyToNumber(service.value)
       }));
-      
+
       return formData;
     },
 
     // Método para formatar números existentes para formato monetário
     formatNumberToMoney(number) {
       if (!number && number !== 0) return 'R$ 0,00';
-      
+
       return new Intl.NumberFormat('pt-BR', {
         style: 'currency',
         currency: 'BRL'
@@ -472,7 +504,7 @@ export default {
         }
 
         const formData = this.prepareFormData();
-        
+
         const updatedData = {
           client_id: formData.client_id,
           vehicle_id: formData.vehicle_id || null,
@@ -637,7 +669,7 @@ export default {
         }
 
         const formData = this.prepareFormData();
-        
+
         const adminUid = this.$store.state.user.currentUser.uid;
         const order = {
           client_id: formData.client_id,
@@ -875,6 +907,10 @@ export default {
   .summary-card {
     min-width: auto;
     width: 100%;
+  }
+
+  .mb-3 {
+    margin-bottom: 1rem !important;
   }
 }
 </style>

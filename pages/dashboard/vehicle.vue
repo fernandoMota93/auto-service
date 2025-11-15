@@ -60,6 +60,14 @@
               required
             />
           </b-col>
+
+           <b-col cols="12" md="6" class="mb-2">
+            <b-form-input
+              v-model="vehicle.mileage"
+              placeholder="Quilometragem"
+              required
+            />
+          </b-col>
         </b-form-row>
 
         <b-button
@@ -73,13 +81,13 @@
       </b-form>
     </b-card>
 
-    <b-card title="Meus veículos">
+    <b-card :title="client ? `Veículos de ${client.name}` : 'Meus veículos'">
       <div class="mt-3">
         <b-row>
           <b-col md="6" v-for="v in vehicles" :key="v.id">
             <b-card class="mb-2">
               <strong>{{ v.plate }}</strong> - {{ v.brand_name }} /
-              {{ v.model_name }} / {{ v.year }}
+              {{ v.model_name }} / {{ v.year }} / Km: {{ v.mileage }}
             </b-card>
           </b-col>
         </b-row>
@@ -94,6 +102,9 @@ import vSelect from 'vue-select';
 import 'vue-select/dist/vue-select.css';
 
 export default {
+  props: {
+    client: {type: Object, required: false}
+  },
   components: { vSelect },
   data() {
     return {
@@ -103,6 +114,7 @@ export default {
         year: '',
         plate: '',
         engine: '',
+        mileage: '',
       },
       brands: [],
       models: [],
@@ -113,8 +125,12 @@ export default {
   },
   async mounted() {
     await this.loadBrands();
-    const uid = this.$store.state.user.currentUser.uid;
+    const uid = this.client ? this.client.id : this.$store.state.user.currentUser.uid;
+
+
     this.vehicles = await vehicleService.listByUser(uid);
+
+    console.log('props', this.client)
   },
   methods: {
     async loadBrands() {
@@ -164,7 +180,7 @@ export default {
         return;
       this.loading = true;
 
-      const uid = this.$store.state.user.currentUser.uid;
+      const uid = this.client ? this.client.id : this.$store.state.user.currentUser.uid;
 
       // Busca os nomes legíveis das seleções (opcional, para salvar o nome da marca/modelo)
       const brandObj = this.brands.find((b) => b.codigo === this.vehicle.brand);
@@ -180,6 +196,7 @@ export default {
           year: this.vehicle.year,
           plate: this.vehicle.plate,
           engine: this.vehicle.engine,
+          mileage: this.vehicle.mileage
         });
 
         this.vehicles = await vehicleService.listByUser(uid);
@@ -189,6 +206,7 @@ export default {
           year: '',
           plate: '',
           engine: '',
+          mileage: '',
         };
         this.models = [];
         this.years = [];

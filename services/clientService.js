@@ -25,6 +25,7 @@ export default {
       active: true,
       created_at: new Date(),
       is_deleted: false,
+      phone: client.phone
     };
 
     await db.collection("users").doc(user.uid).set(userData);
