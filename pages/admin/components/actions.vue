@@ -19,9 +19,9 @@
     </b-button>
 
     <!-- Download -->
-    <b-button v-if="type != 'client'" variant="outline-success" size="sm" class="ml-2"
-      v-b-tooltip.hover="'Baixar documentos'" @click="$emit('download', item)">
-      <b-icon icon="download"></b-icon>
+    <b-button v-if="type != 'client' && item.status === 'done'" variant="outline-success" size="sm" class="ml-2"
+      v-b-tooltip.hover="'Ta pronto!'" @click="$emit('sendServiceDone', item)">
+      <b-icon icon="phone"></b-icon>
     </b-button>
 
     <!-- Veículos do Cliente -->

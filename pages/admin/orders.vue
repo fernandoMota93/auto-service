@@ -39,7 +39,8 @@
                 </b-alert>
               </template>
               <template #cell(actions)="item">
-                <Actions @view="viewOS" @edit="editPromptOS" @delete="promptDeleteOS" :item="item.item" />
+                <Actions @view="viewOS" @edit="editPromptOS" @delete="promptDeleteOS" @sendServiceDone="sendServiceDone"
+                  :item="item.item" />
               </template>
               <template #cell(client_id)="item">
                 {{ clientName(item.item.client_id) }}
@@ -123,9 +124,9 @@
       <b-card>
         <b-form @submit.prevent="handlerSubmit">
           <b-form-group label="Cliente">
-            
-             <v-select v-model="form.client_id" :options="clientFilterOptions" label="text"
-                :reduce="(option) => option.value" placeholder="Selecione..." required />
+
+            <v-select v-model="form.client_id" :options="clientFilterOptions" label="text"
+              :reduce="(option) => option.value" placeholder="Selecione..." required />
           </b-form-group>
 
           <b-form-group label="Veículo (opcional)">
@@ -167,8 +168,6 @@
           <div v-if="editable" class="mb-2">
             <hr>
             <h5>HISTÓRICO</h5>
-
-
             <b-form-group label="Adicionar atualização ao histórico">
               <b-form-textarea v-model="form.history_text" placeholder="Ex.: Aguardando peça X..." rows="3"
                 no-resize></b-form-textarea>
@@ -198,6 +197,21 @@
         </b-form>
       </b-card>
     </b-modal>
+
+    <b-modal title="Atenção" v-model="noPhoneFoundModal" hide-footer>
+      <b-row>
+        <b-col cols="12" class="text-center">
+          <p>O cliente não tem telefone configurado!</p>
+        </b-col>
+
+        <b-col cols="12" class="text-center">
+          <b-button variant="primary" tag="nuxt-link" to="/admin/clients">
+            Corrigir
+          </b-button>
+        </b-col>
+      </b-row>
+    </b-modal>
+
   </div>
 </template>
 
@@ -219,6 +233,7 @@ export default {
   data() {
     return {
       viewOSModal: false,
+      noPhoneFoundModal: false,
       launchModal: false,
       editable: false,
       isSubmitting: false,
@@ -623,6 +638,16 @@ export default {
       return c ? c.name : id;
     },
 
+    clientPhone(id) {
+      const c = this.clients.find((x) => x.id === id);
+      return c ? c.phone : null;
+    },
+
+    cleanPhone(phone) {
+      if (!phone) return '';
+      return phone.replace(/\D/g, '');
+    },
+
     addService() {
       if (!Array.isArray(this.form.services)) {
         this.form.services = [];
@@ -775,6 +800,38 @@ export default {
         this.imageToDelete = null;
         this.imageOrderId = null;
       }
+    },
+
+    sendServiceDone(item) {
+      let name = this.clientName(item.client_id);
+      let orderId = item.id;
+      let description = item.description;
+      let phone = this.clientPhone(item.client_id)
+
+      if (!phone) {
+        this.noPhoneFoundModal = true;
+        return 0
+      }
+
+      const platformUrl = 'https://grilo-auto-service.web.app/dashboard/orders/' + orderId;
+
+      const message = `Olá ${name}!
+
+        O Serviço do carro está pronto!
+
+        *Serviço:* ${description}
+        *Veja os detalhes:* ${platformUrl}
+
+        *Instruções:*
+        1. Acesse o link acima
+        2. Use seu email e a senha fornecida
+
+        Em caso de dúvidas, estamos à disposição!`;
+
+      const encodedMessage = encodeURIComponent(message);
+      const whatsappUrl = `https://wa.me/55${this.cleanPhone(phone)}?text=${encodedMessage}`;
+      window.open(whatsappUrl, '_blank');
+
     },
 
     async exportPDF(o) {

@@ -6,7 +6,8 @@
         :backdrop="isMobile" class="sidebar border-right">
         <div class="p-3 d-flex flex-column h-100">
           <!-- Logo / Nome -->
-          <div class="mb-4 text-center">
+          <div class="mb-4 text-center sidebar-logo-box">
+            <img :src="logoImg" alt="Logo" class="sidebar-logo mb-2" />
             <h5 class="font-weight-bold mb-0 text-primary">{{ appName }}</h5>
           </div>
 
@@ -74,9 +75,12 @@
 </template>
 
 <script>
+import logo from '@/assets/images/logo.jpg'
+
 export default {
   data() {
     return {
+      logoImg: logo,
       appName: this.$config.APP_NAME || 'Grilo Auto-Service',
       sidebarVisible: false,
       isMobile: false,
@@ -209,5 +213,19 @@ export default {
   .sidebar {
     width: 220px;
   }
+}
+
+.sidebar-logo-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.sidebar-logo {
+  width: 110px;
+  max-width: 80%;
+  object-fit: contain;
+  border-radius: 12px;
+
 }
 </style>
