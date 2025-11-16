@@ -1,0 +1,13 @@
+// 1) Sobrescrever a cor primary
+$primary: #10479a;
+
+// 2) Variáveis opcionais
+$theme-colors: (
+  "primary": $primary,
+);
+
+// 3) Importar Bootstrap (SCSS)
+@import "~bootstrap/scss/bootstrap.scss";
+
+// 4) Importar BootstrapVue (SCSS)
+@import "~bootstrap-vue/src/index.scss";

@@ -4,7 +4,7 @@ export default {
       if (!status) return '-'
 
       const map = {
-        open: { label: 'Pendente', color: 'warning' },
+        open: { label: 'Aberta', color: 'warning' },
         in_progress: { label: 'Em andamento', color: 'primary' },
         done: { label: 'Concluída', color: 'success' },
         canceled: { label: 'Cancelada', color: 'danger' },

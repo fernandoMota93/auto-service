@@ -4,7 +4,7 @@
       <div class="d-flex justify-content-between align-items-center mb-3">
         <div>
           <h4>{{ companyName }}</h4>
-          <h5>Ordem de Serviço #{{ orderId }}</h5>
+          <h5>Ordem de Serviço #{{ orderId ? orderId : id }}</h5>
         </div>
         <b-button variant="success" @click="generatePDF">
           <i class="fas fa-file-pdf"> <b-icon icon="printer" /></i>
@@ -53,6 +53,23 @@
           </p>
         </b-col>
       </b-row>
+      <b-row>
+        <b-col cols="12" class="mt-5">
+          <h5>Histórico</h5>
+          <b-table :items="order.history" class="mt-4" show-empty striped
+            :fields="[{ key: 'created_at', label: 'Data' }, { key: 'text', label: 'Descrição' }]" small>
+            <template #cell(created_at)="data">
+              {{ formatFirebaseDate(data.item.created_at) }}
+            </template>
+            <template #empty>
+              <b-alert variant="info" show>
+                <p class="p-1">Sem registro de histórico.</p>
+              </b-alert>
+            </template>
+          </b-table>
+
+        </b-col>
+      </b-row>
 
       <hr />
 
@@ -86,9 +103,10 @@ import { jsPDF } from 'jspdf';
 import { db } from '~/plugins/firebase';
 import timbradoUrl from '@/assets/images/timbrado.png';
 import orderStatusMixin from '~/mixins/orderStatusMixin';
+import mixinShared from '../../../mixins/mixinShared';
 
 export default {
-  mixins: [orderStatusMixin],
+  mixins: [orderStatusMixin, mixinShared],
 
   props: {
     id: { type: String, default: null },

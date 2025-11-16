@@ -16,6 +16,16 @@ export default {
       const minutes = String(date.getMinutes()).padStart(2, '0')
 
       return `${day}/${month}/${year} - ${hours}:${minutes}`
-    }
+    },
+     convertMoneyToNumber(moneyString) {
+      if (!moneyString) return 0;
+
+      const cleaned = moneyString
+        .replace('R$ ', '')
+        .replace(/\./g, '')
+        .replace(',', '.');
+
+      return parseFloat(cleaned) || 0;
+    },
   }
 }

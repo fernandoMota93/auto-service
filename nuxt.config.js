@@ -14,14 +14,13 @@ export default {
     ],
   },
   css: [
-    "bootstrap/dist/css/bootstrap.css",
-    "bootstrap-vue/dist/bootstrap-vue.css",
+    "./assets/scss/custom.scss"
   ],
   plugins: [
     "~/plugins/firebase.js",
     "~/plugins/auth.js",
     "~/plugins/v-money.js",
-    '~/plugins/v-mask.js'
+    "~/plugins/v-mask.js",
   ],
   components: true,
   modules: ["@nuxtjs/dotenv", "bootstrap-vue/nuxt"],
@@ -34,7 +33,7 @@ export default {
     icons: true,
   },
   publicRuntimeConfig: {
-    APP_NAME: process.env.APP_NAME || "Grilo Mecânica",
+    APP_NAME: process.env.APP_NAME || "Grilo Auto Service",
   },
   build: {},
 };

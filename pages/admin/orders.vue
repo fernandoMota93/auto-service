@@ -21,8 +21,9 @@
             </b-col>
 
             <b-col md="3" class="mb-3">
-             
-              <v-select v-model="filters.client_id" :options="clientFilterOptions" label="text" :reduce="(option) => option.value" placeholder="Filtrar por cliente" />
+
+              <v-select v-model="filters.client_id" :options="clientFilterOptions" label="text"
+                :reduce="(option) => option.value" placeholder="Filtrar por cliente" />
             </b-col>
 
             <b-col md="3" class="mb-3">
@@ -122,7 +123,9 @@
       <b-card>
         <b-form @submit.prevent="handlerSubmit">
           <b-form-group label="Cliente">
-            <b-form-select v-model="form.client_id" :options="clientOptions" required />
+            
+             <v-select v-model="form.client_id" :options="clientFilterOptions" label="text"
+                :reduce="(option) => option.value" placeholder="Selecione..." required />
           </b-form-group>
 
           <b-form-group label="Veículo (opcional)">
@@ -159,6 +162,29 @@
               </div>
             </div>
           </b-form-group>
+
+
+          <div v-if="editable" class="mb-2">
+            <hr>
+            <h5>HISTÓRICO</h5>
+
+
+            <b-form-group label="Adicionar atualização ao histórico">
+              <b-form-textarea v-model="form.history_text" placeholder="Ex.: Aguardando peça X..." rows="3"
+                no-resize></b-form-textarea>
+            </b-form-group>
+          </div>
+          <b-table :items="form.history" class="mt-4" show-empty striped
+            :fields="[{ key: 'created_at', label: 'Data' }, { key: 'text', label: 'Descrição' }]" small>
+            <template #cell(created_at)="data">
+              {{ formatFirebaseDate(data.item.created_at) }}
+            </template>
+            <template #empty>
+              <b-alert variant="info" show>
+                <p class="p-1">Sem registro de histórico.</p>
+              </b-alert>
+            </template>
+          </b-table>
 
           <b-button type="submit" variant="primary" :disabled="isSubmitting">
             <span v-if="isSubmitting">
@@ -204,7 +230,7 @@ export default {
       },
       statusOptions: [
         { value: 'all', text: 'Todos' },
-        { value: 'open', text: 'Pendente' },
+        { value: 'open', text: 'Aberta' },
         { value: 'in_progress', text: 'Em andamento' },
         { value: 'done', text: 'Concluído' },
         { value: 'canceled', text: 'Cancelado' },
@@ -228,6 +254,8 @@ export default {
         description: '',
         services: [{ name: '', value: 0 }],
         status: 'open',
+        history_text: '',
+        history: []
       },
       files: [],
       imageToDelete: null,
@@ -316,21 +344,17 @@ export default {
       }
     },
 
-    // FILTRO ATUALIZADO COM CLIENTE
     applyFilters() {
       let filtered = this.allOrders.filter(order => !order.deleted_at);
 
-      // Filtro por status
       if (this.filters.status && this.filters.status !== 'all') {
         filtered = filtered.filter(order => order.status === this.filters.status);
       }
 
-      // NOVO: Filtro por cliente
       if (this.filters.client_id) {
         filtered = filtered.filter(order => order.client_id === this.filters.client_id);
       }
 
-      // Filtro por data
       if (this.filters.selectedDate) {
         const selectedDate = new Date(this.filters.selectedDate);
         const nextDay = new Date(selectedDate);
@@ -347,7 +371,6 @@ export default {
       this.updatePagination();
     },
 
-    // Converte created_at para Date object
     getOrderDate(created_at) {
       try {
         if (!created_at) return new Date(0);
@@ -376,20 +399,17 @@ export default {
       }
     },
 
-    // Atualiza os dados paginados
     updatePagination() {
       const startIndex = (this.currentPage - 1) * this.perPage;
       const endIndex = startIndex + this.perPage;
       this.paginatedOrders = this.filteredOrders.slice(startIndex, endIndex);
     },
 
-    // Handler para mudança de página
     onPageChange(page) {
       this.currentPage = page;
       this.updatePagination();
     },
 
-    // Handler para aplicar filtros
     onFilter() {
       this.currentPage = 1;
       this.applyFilters();
@@ -420,7 +440,6 @@ export default {
       });
     },
 
-    // Limpar filtros ATUALIZADO
     clearFilters() {
       this.filters = {
         selectedDate: null,
@@ -445,20 +464,6 @@ export default {
       }
     },
 
-    // Método para converter string monetária para número
-    convertMoneyToNumber(moneyString) {
-      if (!moneyString) return 0;
-
-      // Remove "R$ ", pontos e converte vírgula para ponto
-      const cleaned = moneyString
-        .replace('R$ ', '')
-        .replace(/\./g, '')
-        .replace(',', '.');
-
-      return parseFloat(cleaned) || 0;
-    },
-
-    // Método para preparar os dados antes de salvar
     prepareFormData() {
       const formData = { ...this.form };
 
@@ -503,6 +508,12 @@ export default {
           return;
         }
 
+        if (this.form.history_text.trim() !== '') {
+          this.form.history.push({
+            text: this.form.history_text,
+            created_at: new Date()
+          });
+        }
         const formData = this.prepareFormData();
 
         const updatedData = {
@@ -511,6 +522,7 @@ export default {
           description: formData.description,
           services: formData.services.filter(s => s.name),
           status: formData.status,
+          history: this.form.history
         };
 
         await orderService.update(this.osId, updatedData);
@@ -585,6 +597,8 @@ export default {
         description: item.description,
         services: this.formatExistingValues(item.services),
         status: item.status,
+        history: item.history || [],   // ← carrega do banco
+        history_text: ''               // ← limpa o campo
       };
 
       this.files = (item.images || []).map((url) => ({

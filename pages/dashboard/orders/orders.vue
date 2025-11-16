@@ -8,42 +8,42 @@
       </div>
 
       <b-row>
-        <b-col md="6" v-for="o in orders" :key="o.id" class="mb-3">
-          <b-card
-            @click="$router.push(`/dashboard/orders/${o.id}`)"
-            style="cursor: pointer"
-          >
-            <div class="d-flex justify-content-between align-items-center">
-              <h5></h5>
-              <b-button
-                size="sm"
-                variant="outline-success"
-                @click="exportPDF(o)"
-              >
+        <b-col cols="12" md="12" lg="6" v-for="o in orders" :key="o.id" class="mb-3">
+
+          <b-card class="shadow-sm" style="cursor: pointer" @click="$router.push(`/dashboard/orders/${o.id}`)">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <h5 class="mb-0">OS #{{ o.id.substring(0, 6) }}</h5>
+
+              <b-button size="sm" variant="outline-success" @click.stop="exportPDF(o)">
                 <b-icon icon="printer"></b-icon>
               </b-button>
             </div>
+
+            <!-- Data -->
             <p class="mb-1">
               <strong>Data de criação:</strong> {{ formatDate(o.created_at) }}
             </p>
-            <b-badge :variant="formatOrderStatus(o.status).color">
+
+            <!-- Status -->
+            <b-badge :variant="formatOrderStatus(o.status).color" class="mb-2">
               {{ formatOrderStatus(o.status).label }}
             </b-badge>
-            <p class="mb-1"><strong>Valor total:</strong> {{ total(o) }}</p>
 
-            <div v-if="o.images && o.images.length">
-              <h6 class="mt-2">Imagens:</h6>
-              <img
-                v-for="img in o.images"
-                :key="img"
-                :src="img"
-                class="img-thumbnail mr-2"
-                style="max-width: 120px"
-              />
-            </div>
+            <!-- Valor -->
+            <p class="mb-1">
+              <strong>Valor total:</strong> {{ total(o) }}
+            </p>
+
+            <!-- Descrição -->
+            <p class="mt-2 text-muted">
+              <strong>Descrição:</strong><br />
+              {{ o.description || '—' }}
+            </p>
           </b-card>
+
         </b-col>
       </b-row>
+
     </b-card>
   </div>
 </template>
