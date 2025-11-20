@@ -13,14 +13,13 @@ export default {
       },
     ],
   },
-  css: [
-    "./assets/scss/custom.scss"
-  ],
+  css: ["./assets/scss/custom.scss"],
   plugins: [
     "~/plugins/firebase.js",
     "~/plugins/auth.js",
     "~/plugins/v-money.js",
     "~/plugins/v-mask.js",
+    "~/plugins/vue-apexcharts.js",
   ],
   components: true,
   modules: ["@nuxtjs/dotenv", "bootstrap-vue/nuxt"],

@@ -14,7 +14,14 @@
     </b-row>
 
     <!-- Tabela -->
-    <b-table :items="clients" :fields="fields" hover small responsive bordered>
+    <b-table :items="clients" :fields="fields" hover small responsive bordered show-empty>
+      <template #empty>
+      
+          <b-alert show variant="info">
+          <p class="p-2"> Não existe registro no sistema.</p>
+          </b-alert>
+        
+      </template>
       <template #cell(actions)="item">
         <Actions @edit="openEditModal" @delete="openDeleteModal" @recoverPassword="sendRecoverEmail"
           @openVehicles="openVehicles" @sendMessage="sendWhatsapp" :item="item.item" type="client" />

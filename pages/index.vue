@@ -164,9 +164,9 @@ export default {
         
         const profile = this.$store.state.user.profile
         if (profile && profile.role === 'admin') {
-          this.$router.push('/admin/orders')
-        } else {
           this.$router.push('/dashboard')
+        } else {
+          this.$router.push('/dashboard/orders')
         }
       } catch (error) {
         this.error = error.message || 'Erro ao fazer login. Tente novamente.'
