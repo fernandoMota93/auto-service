@@ -13,7 +13,7 @@
           <b-row class="mb-3">
             <!-- FILTROS -->
             <b-col md="3" class="mb-3">
-              <b-form-datepicker v-model="filters.selectedDate" placeholder="Selecione uma data"></b-form-datepicker>
+              <b-form-select v-model="filters.dateRange" :options="dateRangeOptions"  @input="onFilter"/>
             </b-col>
 
             <b-col md="3" class="mb-3">
@@ -226,6 +226,8 @@ import mixinShared from '../../mixins/mixinShared';
 import _id from '../dashboard/orders/_id.vue';
 import vSelect from 'vue-select';
 import 'vue-select/dist/vue-select.css';
+import {startOfToday, subDays, subMonths, subYears } from 'date-fns'
+
 
 export default {
   mixins: [orderStatusMixin, mixinShared],
@@ -239,7 +241,7 @@ export default {
       isSubmitting: false,
       osId: '',
       filters: {
-        selectedDate: new Date().toISOString().split('T')[0],
+        dateRange: 'today',
         status: 'all',
         client_id: null, // NOVO FILTRO POR CLIENTE
       },
@@ -251,6 +253,15 @@ export default {
         { value: 'canceled', text: 'Cancelado' },
         { value: 'on_hold', text: 'Em espera' },
       ],
+      dateRangeOptions: [
+        { value: null, text: 'Selecionar período' },
+        { value: 'today', text: 'Hoje' },
+        { value: 'last7', text: 'Últimos 7 dias' },
+        { value: 'last30', text: 'Últimos 30 dias' },
+        { value: 'last6m', text: 'Últimos 6 meses' },
+        { value: 'last1y', text: 'Último ano' }
+      ],
+
       osToDelete: null,
       totalOrders: 0,
       currentPage: 1,
@@ -341,6 +352,39 @@ export default {
   },
 
   methods: {
+    filterByDateRange(orderDate, range) {
+      const today = startOfToday();
+
+      switch (range) {
+        case 'today': {
+          return orderDate >= today;
+        }
+
+        case 'last7': {
+          const start = subDays(today, 7);
+          return orderDate >= start && orderDate <= today;
+        }
+
+        case 'last30': {
+          const start = subDays(today, 30);
+          return orderDate >= start && orderDate <= today;
+        }
+
+        case 'last6m': {
+          const start = subMonths(today, 6);
+          return orderDate >= start && orderDate <= today;
+        }
+
+        case 'last1y': {
+          const start = subYears(today, 1);
+          return orderDate >= start && orderDate <= today;
+        }
+
+        default:
+          return true;
+      }
+    },
+
     // Carrega todos os orders uma vez
     async loadAllOrders() {
       try {
@@ -360,24 +404,23 @@ export default {
     },
 
     applyFilters() {
-      let filtered = this.allOrders.filter(order => !order.deleted_at);
+      let filtered = this.allOrders.filter(o => !o.deleted_at);
 
-      if (this.filters.status && this.filters.status !== 'all') {
-        filtered = filtered.filter(order => order.status === this.filters.status);
+      // FILTRO STATUS
+      if (this.filters.status !== 'all') {
+        filtered = filtered.filter(o => o.status === this.filters.status);
       }
 
+      // FILTRO CLIENTE
       if (this.filters.client_id) {
-        filtered = filtered.filter(order => order.client_id === this.filters.client_id);
+        filtered = filtered.filter(o => o.client_id === this.filters.client_id);
       }
 
-      if (this.filters.selectedDate) {
-        const selectedDate = new Date(this.filters.selectedDate);
-        const nextDay = new Date(selectedDate);
-        nextDay.setDate(nextDay.getDate() + 1);
-
+      // NOVO FILTRO POR PERÍODO
+      if (this.filters.dateRange) {
         filtered = filtered.filter(order => {
           const orderDate = this.getOrderDate(order.created_at);
-          return orderDate >= selectedDate && orderDate < nextDay;
+          return this.filterByDateRange(orderDate, this.filters.dateRange);
         });
       }
 
@@ -385,6 +428,7 @@ export default {
       this.totalOrders = filtered.length;
       this.updatePagination();
     },
+
 
     getOrderDate(created_at) {
       try {
@@ -457,18 +501,12 @@ export default {
 
     clearFilters() {
       this.filters = {
-        selectedDate: null,
+        dateRange: null,
         status: 'all',
-        client_id: null,
+        client_id: null
       };
-      this.currentPage = 1;
-      this.applyFilters();
 
-      this.$bvToast.toast('Filtros limpos', {
-        title: 'Sucesso',
-        variant: 'info',
-        solid: true,
-      });
+      this.applyFilters();
     },
 
     handlerSubmit() {
