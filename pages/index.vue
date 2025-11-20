@@ -166,7 +166,7 @@ export default {
         if (profile && profile.role === 'admin') {
           this.$router.push('/dashboard')
         } else {
-          this.$router.push('/dashboard/orders')
+          this.$router.push('/dashboard/orders/orders')
         }
       } catch (error) {
         this.error = error.message || 'Erro ao fazer login. Tente novamente.'
