@@ -4,19 +4,25 @@
 
     <b-card class="p-2">
       <b-row>
-        <b-col cols="12" md="4">
+        <b-col cols="12" md="3">
           <div class="card-box aberta mb-2">
             <h4>OS Abertas</h4>
             <p>{{ osAbertas.length }}</p>
           </div>
         </b-col>
-        <b-col cols="12" md="4">
+        <b-col cols="12" md="3">
           <div class="card-box encerrada mb-2">
             <h4>OS Encerradas</h4>
             <p>{{ osEncerradas.length }}</p>
           </div>
         </b-col>
-        <b-col cols="12" md="4">
+         <b-col cols="12" md="3">
+          <div class="card-box andamento mb-2">
+            <h4>Em Andamento</h4>
+            <p>{{ osEmAndamento.length }}</p>
+          </div>
+        </b-col>
+        <b-col cols="12" md="3">
           <div class="card-box total mb-2">
             <h4>Total</h4>
             <p>{{ osList.length }}</p>
@@ -31,7 +37,7 @@
           <OsByMonthChart :osList="osList" />
 
         </b-col>
-       
+
       </b-row>
     </b-card>
 
@@ -58,6 +64,9 @@ export default {
     },
     osEncerradas() {
       return this.osList.filter(os => os.status === "done");
+    },
+    osEmAndamento() {
+      return this.osList.filter(os => os.status === "in_progress");
     }
   },
 
@@ -81,8 +90,13 @@ export default {
 }
 
 .aberta {
-  background: #008FFB;
+  background: #938700;
 }
+
+.andamento {
+  background: #0a4878;
+}
+
 
 .encerrada {
   background: #00E396;
