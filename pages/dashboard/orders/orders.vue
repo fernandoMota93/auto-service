@@ -14,9 +14,7 @@
             <div class="d-flex justify-content-between align-items-center mb-2">
               <h5 class="mb-0">OS #{{ o.id.substring(0, 6) }} {{ o && o.os_number ? ' ('+o.os_number+')' : '(S/Nr)' }}</h5>
 
-              <b-button size="sm" variant="outline-success" @click.stop="exportPDF(o)">
-                <b-icon icon="printer"></b-icon>
-              </b-button>
+             
             </div>
 
             <!-- Data -->

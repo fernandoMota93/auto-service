@@ -1,0 +1,104 @@
+[debug] [2025-11-21T18:34:00.155Z] ----------------------------------------------------------------------
+[debug] [2025-11-21T18:34:00.158Z] Command:       C:\Program Files\nodejs\node.exe C:\Program Files\nodejs\node_modules\firebase-tools\lib\bin\firebase.js deploy
+[debug] [2025-11-21T18:34:00.158Z] CLI Version:   14.24.1
+[debug] [2025-11-21T18:34:00.158Z] Platform:      win32
+[debug] [2025-11-21T18:34:00.158Z] Node Version:  v20.19.4
+[debug] [2025-11-21T18:34:00.158Z] Time:          Fri Nov 21 2025 15:34:00 GMT-0300 (Brasilia Standard Time)
+[debug] [2025-11-21T18:34:00.159Z] ----------------------------------------------------------------------
+[debug] 
+[debug] [2025-11-21T18:34:00.441Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2025-11-21T18:34:00.442Z] > authorizing via signed-in user (mottta.h@gmail.com)
+[debug] [2025-11-21T18:34:00.442Z] [iam] checking project grilo-auto-service for permissions ["datastore.indexes.create","datastore.indexes.delete","datastore.indexes.list","datastore.indexes.update","firebase.projects.get","firebasehosting.sites.update"]
+[debug] [2025-11-21T18:34:00.443Z] Checked if tokens are valid: false, expires at: 1763682017288
+[debug] [2025-11-21T18:34:00.443Z] Checked if tokens are valid: false, expires at: 1763682017288
+[debug] [2025-11-21T18:34:00.444Z] > refreshing access token with scopes: []
+[debug] [2025-11-21T18:34:00.446Z] >>> [apiv2][query] POST https://www.googleapis.com/oauth2/v3/token [none]
+[debug] [2025-11-21T18:34:00.446Z] >>> [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2025-11-21T18:34:00.821Z] <<< [apiv2][status] POST https://www.googleapis.com/oauth2/v3/token 200
+[debug] [2025-11-21T18:34:00.821Z] <<< [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2025-11-21T18:34:00.829Z] >>> [apiv2][query] POST https://cloudresourcemanager.googleapis.com/v1/projects/grilo-auto-service:testIamPermissions [none]
+[debug] [2025-11-21T18:34:00.829Z] >>> [apiv2][(partial)header] POST https://cloudresourcemanager.googleapis.com/v1/projects/grilo-auto-service:testIamPermissions x-goog-quota-user=projects/grilo-auto-service
+[debug] [2025-11-21T18:34:00.829Z] >>> [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/grilo-auto-service:testIamPermissions {"permissions":["datastore.indexes.create","datastore.indexes.delete","datastore.indexes.list","datastore.indexes.update","firebase.projects.get","firebasehosting.sites.update"]}
+[debug] [2025-11-21T18:34:01.821Z] <<< [apiv2][status] POST https://cloudresourcemanager.googleapis.com/v1/projects/grilo-auto-service:testIamPermissions 200
+[debug] [2025-11-21T18:34:01.822Z] <<< [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/grilo-auto-service:testIamPermissions {"permissions":["datastore.indexes.create","datastore.indexes.delete","datastore.indexes.list","datastore.indexes.update","firebase.projects.get","firebasehosting.sites.update"]}
+[debug] [2025-11-21T18:34:01.822Z] Checked if tokens are valid: true, expires at: 1763753639821
+[debug] [2025-11-21T18:34:01.822Z] Checked if tokens are valid: true, expires at: 1763753639821
+[debug] [2025-11-21T18:34:01.822Z] >>> [apiv2][query] GET https://firebase.googleapis.com/v1beta1/projects/grilo-auto-service [none]
+[debug] [2025-11-21T18:34:02.393Z] <<< [apiv2][status] GET https://firebase.googleapis.com/v1beta1/projects/grilo-auto-service 200
+[debug] [2025-11-21T18:34:02.393Z] <<< [apiv2][body] GET https://firebase.googleapis.com/v1beta1/projects/grilo-auto-service {"projectId":"grilo-auto-service","projectNumber":"657446862017","displayName":"grilo-auto-service","name":"projects/grilo-auto-service","resources":{"hostingSite":"grilo-auto-service"},"state":"ACTIVE","etag":"1_208dfbc6-a7de-4108-a401-2f1c88b42f14"}
+[info] 
+[info] === Deploying to 'grilo-auto-service'...
+[info] 
+[info] i  deploying firestore, hosting 
+[info] i  firestore: ensuring required API firestore.googleapis.com is enabled... 
+[info] i  firestore: ensuring required API firestore.googleapis.com is enabled... 
+[debug] [2025-11-21T18:34:02.401Z] Checked if tokens are valid: true, expires at: 1763753639821
+[debug] [2025-11-21T18:34:02.401Z] Checked if tokens are valid: true, expires at: 1763753639821
+[debug] [2025-11-21T18:34:02.402Z] >>> [apiv2][query] GET https://firestore.googleapis.com/v1/projects/grilo-auto-service/databases/(default) [none]
+[debug] [2025-11-21T18:34:02.782Z] <<< [apiv2][status] GET https://firestore.googleapis.com/v1/projects/grilo-auto-service/databases/(default) 200
+[debug] [2025-11-21T18:34:02.783Z] <<< [apiv2][body] GET https://firestore.googleapis.com/v1/projects/grilo-auto-service/databases/(default) {"name":"projects/grilo-auto-service/databases/(default)","uid":"d472d119-b26b-4e1d-acf5-63c043e9292a","createTime":"2025-11-08T15:42:03.502499Z","updateTime":"2025-11-08T15:42:03.502499Z","locationId":"southamerica-east1","type":"FIRESTORE_NATIVE","concurrencyMode":"PESSIMISTIC","versionRetentionPeriod":"3600s","earliestVersionTime":"2025-11-21T17:34:02.543842Z","appEngineIntegrationMode":"DISABLED","keyPrefix":"i","pointInTimeRecoveryEnablement":"POINT_IN_TIME_RECOVERY_DISABLED","deleteProtectionState":"DELETE_PROTECTION_DISABLED","databaseEdition":"STANDARD","freeTier":true,"realtimeUpdatesMode":"REALTIME_UPDATES_MODE_ENABLED","etag":"IObFiPbwg5EDMOfs3vXz4pAD"}
+[info] i  firestore: reading indexes from firestore.indexes.json... 
+[info] i  cloud.firestore: checking firestore.rules for compilation errors... 
+[debug] [2025-11-21T18:34:02.785Z] Checked if tokens are valid: true, expires at: 1763753639821
+[debug] [2025-11-21T18:34:02.785Z] Checked if tokens are valid: true, expires at: 1763753639821
+[debug] [2025-11-21T18:34:02.785Z] >>> [apiv2][query] POST https://firebaserules.googleapis.com/v1/projects/grilo-auto-service:test [none]
+[debug] [2025-11-21T18:34:02.785Z] >>> [apiv2][body] POST https://firebaserules.googleapis.com/v1/projects/grilo-auto-service:test [omitted]
+[debug] [2025-11-21T18:34:04.011Z] <<< [apiv2][status] POST https://firebaserules.googleapis.com/v1/projects/grilo-auto-service:test 200
+[debug] [2025-11-21T18:34:04.011Z] <<< [apiv2][body] POST https://firebaserules.googleapis.com/v1/projects/grilo-auto-service:test {}
+[info] +  cloud.firestore: rules file firestore.rules compiled successfully 
+[debug] [2025-11-21T18:34:04.021Z] Checked if tokens are valid: true, expires at: 1763753639821
+[debug] [2025-11-21T18:34:04.021Z] Checked if tokens are valid: true, expires at: 1763753639821
+[debug] [2025-11-21T18:34:04.021Z] >>> [apiv2][query] POST https://firebasehosting.googleapis.com/v1beta1/projects/-/sites/grilo-auto-service/versions [none]
+[debug] [2025-11-21T18:34:04.021Z] >>> [apiv2][body] POST https://firebasehosting.googleapis.com/v1beta1/projects/-/sites/grilo-auto-service/versions {"status":"CREATED","labels":{"deployment-tool":"cli-firebase"}}
+[debug] [2025-11-21T18:34:05.581Z] <<< [apiv2][status] POST https://firebasehosting.googleapis.com/v1beta1/projects/-/sites/grilo-auto-service/versions 200
+[debug] [2025-11-21T18:34:05.581Z] <<< [apiv2][body] POST https://firebasehosting.googleapis.com/v1beta1/projects/-/sites/grilo-auto-service/versions {"name":"projects/657446862017/sites/grilo-auto-service/versions/bf1679535802078a","status":"CREATED","config":{},"labels":{"deployment-tool":"cli-firebase"}}
+[debug] [2025-11-21T18:34:05.582Z] Checked if tokens are valid: true, expires at: 1763753639821
+[debug] [2025-11-21T18:34:05.582Z] Checked if tokens are valid: true, expires at: 1763753639821
+[debug] [2025-11-21T18:34:05.583Z] >>> [apiv2][query] GET https://firebaserules.googleapis.com/v1/projects/grilo-auto-service/releases pageSize=10&pageToken=
+[debug] [2025-11-21T18:34:06.622Z] <<< [apiv2][status] GET https://firebaserules.googleapis.com/v1/projects/grilo-auto-service/releases 200
+[debug] [2025-11-21T18:34:06.622Z] <<< [apiv2][body] GET https://firebaserules.googleapis.com/v1/projects/grilo-auto-service/releases {"releases":[{"name":"projects/grilo-auto-service/releases/cloud.firestore","rulesetName":"projects/grilo-auto-service/rulesets/6b8058b0-07cb-466a-86e8-e89f79904032","createTime":"2025-11-08T15:42:12.202064Z","updateTime":"2025-11-20T22:41:07.022457Z"}]}
+[debug] [2025-11-21T18:34:06.622Z] Checked if tokens are valid: true, expires at: 1763753639821
+[debug] [2025-11-21T18:34:06.622Z] Checked if tokens are valid: true, expires at: 1763753639821
+[debug] [2025-11-21T18:34:06.623Z] >>> [apiv2][query] GET https://firebaserules.googleapis.com/v1/projects/grilo-auto-service/rulesets/6b8058b0-07cb-466a-86e8-e89f79904032 [none]
+[debug] [2025-11-21T18:34:06.939Z] <<< [apiv2][status] GET https://firebaserules.googleapis.com/v1/projects/grilo-auto-service/rulesets/6b8058b0-07cb-466a-86e8-e89f79904032 200
+[debug] [2025-11-21T18:34:06.939Z] <<< [apiv2][body] GET https://firebaserules.googleapis.com/v1/projects/grilo-auto-service/rulesets/6b8058b0-07cb-466a-86e8-e89f79904032 [omitted]
+[info] i  firestore: latest version of firestore.rules already up to date, skipping upload... 
+[info] i  firestore: deploying indexes... 
+[debug] [2025-11-21T18:34:06.941Z] Checked if tokens are valid: true, expires at: 1763753639821
+[debug] [2025-11-21T18:34:06.941Z] Checked if tokens are valid: true, expires at: 1763753639821
+[debug] [2025-11-21T18:34:06.941Z] >>> [apiv2][query] GET https://firestore.googleapis.com/v1/projects/grilo-auto-service/databases/(default)/collectionGroups/-/indexes [none]
+[debug] [2025-11-21T18:34:07.097Z] <<< [apiv2][status] GET https://firestore.googleapis.com/v1/projects/grilo-auto-service/databases/(default)/collectionGroups/-/indexes 200
+[debug] [2025-11-21T18:34:07.097Z] <<< [apiv2][body] GET https://firestore.googleapis.com/v1/projects/grilo-auto-service/databases/(default)/collectionGroups/-/indexes {"indexes":[{"name":"projects/grilo-auto-service/databases/(default)/collectionGroups/orders/indexes/CICAgJim14AK","queryScope":"COLLECTION","fields":[{"fieldPath":"is_deleted","order":"ASCENDING"},{"fieldPath":"status","order":"ASCENDING"},{"fieldPath":"created_at","order":"DESCENDING"},{"fieldPath":"__name__","order":"DESCENDING"}],"state":"READY","density":"SPARSE_ALL"},{"name":"projects/grilo-auto-service/databases/(default)/collectionGroups/orders/indexes/CICAgOjXh4EK","queryScope":"COLLECTION","fields":[{"fieldPath":"user_id","order":"ASCENDING"},{"fieldPath":"created_at","order":"DESCENDING"},{"fieldPath":"__name__","order":"DESCENDING"}],"state":"READY","density":"SPARSE_ALL"},{"name":"projects/grilo-auto-service/databases/(default)/collectionGroups/users/indexes/CICAgJj7z4EK","queryScope":"COLLECTION","fields":[{"fieldPath":"is_deleted","order":"ASCENDING"},{"fieldPath":"name_insensitive","order":"ASCENDING"},{"fieldPath":"__name__","order":"ASCENDING"}],"state":"READY","density":"SPARSE_ALL"},{"name":"projects/grilo-auto-service/databases/(default)/collectionGroups/orders/indexes/CICAgJjF9oIK","queryScope":"COLLECTION","fields":[{"fieldPath":"is_deleted","order":"ASCENDING"},{"fieldPath":"created_at","order":"ASCENDING"},{"fieldPath":"__name__","order":"ASCENDING"}],"state":"READY","density":"SPARSE_ALL"},{"name":"projects/grilo-auto-service/databases/(default)/collectionGroups/orders/indexes/CICAgJiUpoMK","queryScope":"COLLECTION","fields":[{"fieldPath":"client_id","order":"ASCENDING"},{"fieldPath":"created_at","order":"DESCENDING"},{"fieldPath":"__name__","order":"DESCENDING"}],"state":"READY","density":"SPARSE_ALL"},{"name":"projects/grilo-auto-service/databases/(default)/collectionGroups/users/indexes/CICAgNi47oMK","queryScope":"COLLECTION","fields":[{"fieldPath":"is_deleted","order":"ASCENDING"},{"fieldPath":"name","order":"ASCENDING"},{"fieldPath":"__name__","order":"ASCENDING"}],"state":"READY","density":"SPARSE_ALL"},{"name":"projects/grilo-auto-service/databases/(default)/collectionGroups/orders/indexes/CICAgOi3kJAK","queryScope":"COLLECTION","fields":[{"fieldPath":"deleted_at","order":"ASCENDING"},{"fieldPath":"created_at","order":"DESCENDING"},{"fieldPath":"__name__","order":"DESCENDING"}],"state":"READY","density":"SPARSE_ALL"},{"name":"projects/grilo-auto-service/databases/(default)/collectionGroups/orders/indexes/CICAgJjmiJEK","queryScope":"COLLECTION","fields":[{"fieldPath":"is_deleted","order":"ASCENDING"},{"fieldPath":"status","order":"ASCENDING"},{"fieldPath":"created_at","order":"ASCENDING"},{"fieldPath":"__name__","order":"ASCENDING"}],"state":"READY","density":"SPARSE_ALL"},{"name":"projects/grilo-auto-service/databases/(default)/collectionGroups/orders/indexes/CICAgJiUsZIK","queryScope":"COLLECTION","fields":[{"fieldPath":"is_deleted","order":"ASCENDING"},{"fieldPath":"created_at","order":"DESCENDING"},{"fieldPath":"__name__","order":"DESCENDING"}],"state":"READY","density":"SPARSE_ALL"}]}
+[debug] [2025-11-21T18:34:07.097Z] Checked if tokens are valid: true, expires at: 1763753639821
+[debug] [2025-11-21T18:34:07.097Z] Checked if tokens are valid: true, expires at: 1763753639821
+[debug] [2025-11-21T18:34:07.097Z] >>> [apiv2][query] GET https://firestore.googleapis.com/v1/projects/grilo-auto-service/databases/(default)/collectionGroups/-/fields?filter=indexConfig.usesAncestorConfig=false OR ttlConfig:* [none]
+[debug] [2025-11-21T18:34:07.190Z] <<< [apiv2][status] GET https://firestore.googleapis.com/v1/projects/grilo-auto-service/databases/(default)/collectionGroups/-/fields?filter=indexConfig.usesAncestorConfig=false OR ttlConfig:* 200
+[debug] [2025-11-21T18:34:07.190Z] <<< [apiv2][body] GET https://firestore.googleapis.com/v1/projects/grilo-auto-service/databases/(default)/collectionGroups/-/fields?filter=indexConfig.usesAncestorConfig=false OR ttlConfig:* {"fields":[{"name":"projects/grilo-auto-service/databases/(default)/collectionGroups/__default__/fields/*","indexConfig":{"indexes":[{"queryScope":"COLLECTION","fields":[{"fieldPath":"*","order":"ASCENDING"}],"state":"READY"},{"queryScope":"COLLECTION","fields":[{"fieldPath":"*","order":"DESCENDING"}],"state":"READY"},{"queryScope":"COLLECTION","fields":[{"fieldPath":"*","arrayConfig":"CONTAINS"}],"state":"READY"}]}}]}
+[debug] [2025-11-21T18:34:07.190Z] Checked if tokens are valid: true, expires at: 1763753639821
+[debug] [2025-11-21T18:34:07.190Z] Checked if tokens are valid: true, expires at: 1763753639821
+[debug] [2025-11-21T18:34:07.190Z] >>> [apiv2][query] GET https://firestore.googleapis.com/v1/projects/grilo-auto-service/databases/(default) [none]
+[debug] [2025-11-21T18:34:07.273Z] <<< [apiv2][status] GET https://firestore.googleapis.com/v1/projects/grilo-auto-service/databases/(default) 200
+[debug] [2025-11-21T18:34:07.273Z] <<< [apiv2][body] GET https://firestore.googleapis.com/v1/projects/grilo-auto-service/databases/(default) {"name":"projects/grilo-auto-service/databases/(default)","uid":"d472d119-b26b-4e1d-acf5-63c043e9292a","createTime":"2025-11-08T15:42:03.502499Z","updateTime":"2025-11-08T15:42:03.502499Z","locationId":"southamerica-east1","type":"FIRESTORE_NATIVE","concurrencyMode":"PESSIMISTIC","versionRetentionPeriod":"3600s","earliestVersionTime":"2025-11-21T17:34:07.036073Z","appEngineIntegrationMode":"DISABLED","keyPrefix":"i","pointInTimeRecoveryEnablement":"POINT_IN_TIME_RECOVERY_DISABLED","deleteProtectionState":"DELETE_PROTECTION_DISABLED","databaseEdition":"STANDARD","freeTier":true,"realtimeUpdatesMode":"REALTIME_UPDATES_MODE_ENABLED","etag":"IMvfmvjwg5EDMOfs3vXz4pAD"}
+[info] i  firestore: The following indexes are defined in your project but are not present in your firestore indexes file:
+	(orders) -- (is_deleted,ASCENDING) (status,ASCENDING) (created_at,DESCENDING)  -- Density:SPARSE_ALL 
+	(orders) -- (user_id,ASCENDING) (created_at,DESCENDING)  -- Density:SPARSE_ALL 
+	(users) -- (is_deleted,ASCENDING) (name_insensitive,ASCENDING)  -- Density:SPARSE_ALL 
+	(orders) -- (is_deleted,ASCENDING) (created_at,ASCENDING)  -- Density:SPARSE_ALL 
+	(orders) -- (client_id,ASCENDING) (created_at,DESCENDING)  -- Density:SPARSE_ALL 
+	(users) -- (is_deleted,ASCENDING) (name,ASCENDING)  -- Density:SPARSE_ALL 
+	(orders) -- (deleted_at,ASCENDING) (created_at,DESCENDING)  -- Density:SPARSE_ALL 
+	(orders) -- (is_deleted,ASCENDING) (status,ASCENDING) (created_at,ASCENDING)  -- Density:SPARSE_ALL 
+	(orders) -- (is_deleted,ASCENDING) (created_at,DESCENDING)  -- Density:SPARSE_ALL  
+[debug] [2025-11-21T18:34:47.930Z] ExitPromptError: User force closed the prompt with SIGINT
+    at Interface.sigint (C:\Users\mota-\AppData\Roaming\nvm\v20.19.4\node_modules\firebase-tools\node_modules\@inquirer\core\dist\commonjs\lib\create-prompt.js:101:37)
+    at Interface.emit (node:events:524:28)
+    at Interface.emit (node:domain:489:12)
+    at [_ttyWrite] [as _ttyWrite] (node:internal/readline/interface:1125:18)
+    at ReadStream.onkeypress (node:internal/readline/interface:264:20)
+    at ReadStream.emit (node:events:536:35)
+    at ReadStream.emit (node:domain:489:12)
+    at emitKeys (node:internal/readline/utils:371:14)
+    at emitKeys.next (<anonymous>)
+    at ReadStream.onData (node:internal/readline/emitKeypressEvents:64:36)
+[error] 
+[error] Error: An unexpected error has occurred.
