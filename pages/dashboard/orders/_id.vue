@@ -78,13 +78,8 @@
         <b-row>
           <b-col md="4" v-for="img in order.images" :key="img" class="mb-3">
             <b-card no-body>
-              <b-img
-                :src="img"
-                fluid
-                alt="Imagem OS"
-                @click="viewImage(img)"
-                style="cursor: pointer; border-radius: 8px"
-              />
+              <b-img :src="img" fluid alt="Imagem OS" @click="viewImage(img)"
+                style="cursor: pointer; border-radius: 8px" />
             </b-card>
           </b-col>
         </b-row>
@@ -100,6 +95,7 @@
 
 <script>
 import { jsPDF } from 'jspdf';
+import autoTable from 'jspdf-autotable';
 import { db } from '~/plugins/firebase';
 import timbradoUrl from '@/assets/images/timbrado.png';
 import orderStatusMixin from '~/mixins/orderStatusMixin';
@@ -151,7 +147,7 @@ export default {
           .doc(this.order.vehicle_id)
           .get();
         this.vehicleName = vdoc.exists
-          ? `${vdoc.data().model} (${vdoc.data().plate})`
+          ? `${vdoc.data().brand_name} - ${vdoc.data().model_name} (${vdoc.data().plate})`
           : 'Sem veículo';
       } else {
         this.vehicleName = 'Sem veículo vinculado';
@@ -194,76 +190,168 @@ export default {
       const pageWidth = doc.internal.pageSize.width;
       const pageHeight = doc.internal.pageSize.height;
 
-      // ✅ Carrega o timbrado
+      const marginLeft = 20;
+      const marginRight = 20;
+      const marginTop = 20;
+
+      let y = marginTop;
+
+      // Carregar timbrado
       const bg = await this.getBase64FromUrl(timbradoUrl);
-      doc.addImage(bg, 'PNG', 0, 0, pageWidth, pageHeight);
 
-      // Cabeçalho
-      doc.setFontSize(16);
-      doc.text(this.companyName, 40, 15);
-      doc.setFontSize(12);
-      doc.text(`Ordem de Serviço #${this.orderId}`, 40, 20);
+      // ===== Função: HEADER + TIMBRADO ==========================
+      const renderHeader = () => {
+        doc.addImage(bg, 'PNG', 0, 0, pageWidth, pageHeight);
 
-      let y = 40;
-      doc.setFontSize(11);
-      doc.text(`Cliente: ${this.clientName}`, 20, y);
-      doc.text(`Veículo: ${this.vehicleName}`, 20, (y += 6));
-      doc.text(
-        `Status: ${this.formatOrderStatus(this.order.status)}`,
-        20,
-        (y += 6)
-      );
-      doc.text(`Data: ${this.formatDate(this.order.created_at)}`, 20, (y += 6));
+        doc.setTextColor('#FFFFFF');
+        doc.setFont('helvetica', 'bold').setFontSize(18);
+        doc.text(this.companyName, pageWidth - 150, 15);
 
-      y += 10;
-      doc.setFontSize(13);
-      doc.text('Serviços realizados:', 20, y);
+        doc.setFontSize(13).setFont('helvetica', 'normal');
+        doc.text(
+          `Ordem de Serviço #${this.orderId ? this.orderId : this.id}`,
+          pageWidth - 150,
+          20
+        );
+      };
+
+      // Renderiza primeira página
+      renderHeader();
+        doc.setTextColor('#000000');
+
+
+      // ==================== BLOCO: DADOS DA OS =============================
+      y = 50;
+
+      doc.setFontSize(14).setFont('helvetica', 'bold');
+      doc.text('Dados da OS', marginLeft, y);
+      y += 8;
+
+      doc.setFontSize(11).setFont('helvetica', 'normal');
+      doc.text(`Cliente: ${this.clientName}`, marginLeft + 5, y);
       y += 6;
-      doc.setFontSize(11);
 
-      this.order.services?.forEach((s) => {
-        doc.text(`${s.name} — R$ ${Number(s.value).toFixed(2)}`, 25, y);
-        y += 6;
+      doc.text(`Veículo: ${this.vehicleName}`, marginLeft + 5, y);
+      y += 6;
+
+      doc.text(`Status: ${this.formatOrderStatus(this.order.status).label}`, marginLeft + 5, y);
+      y += 6;
+
+      doc.text(`Criada em: ${this.formatDate(this.order.created_at)}`, marginLeft + 5, y);
+      y += 14;
+
+      // ==================== SERVIÇOS (autoTable) =============================
+      doc.setFontSize(14).setFont('helvetica', 'bold');
+      doc.text('Serviços Realizados', marginLeft, y);
+      y += 4;
+
+      const servicosBody = this.order.services?.map(s => [
+        s.name,
+        Number(s.value).toFixed(2)
+      ]) || [];
+
+      autoTable(doc, {
+        startY: y,
+        margin: { left: marginLeft, right: marginRight },
+        head: [['Serviço', 'Valor (R$)']],
+        body: servicosBody,
+        styles: { fontSize: 10 },
+        headStyles: { fillColor: [150, 150, 150] },
+        didAddPage: () => {
+          renderHeader();
+        }
       });
 
+      y = doc.lastAutoTable.finalY + 6;
+
+      // TOTAL
+      doc.setFontSize(12).setFont('helvetica', 'bold');
+      doc.text(
+        `Total: R$ ${this.total(this.order).toFixed(2)}`,
+        pageWidth - marginRight - 40,
+        y
+      );
+
+      y += 16;
+
+      // ==================== HISTÓRICO (autoTable) ============================
+      doc.setFontSize(14).setFont('helvetica', 'bold');
+      doc.text('Histórico da OS', marginLeft, y);
       y += 4;
-      doc.text(`Total: R$ ${this.total(this.order).toFixed(2)}`, 25, y);
 
-      // Galeria
-      if (this.order.images && this.order.images.length) {
-        y += 12;
-        doc.setFontSize(13);
-        doc.text('Galeria de Imagens:', 20, y);
-        y += 6;
+      const historicoBody = this.order.history?.map(h => [
+        this.formatFirebaseDate(h.created_at),
+        h.text || '-'
+      ]) || [];
 
-        const imgSize = 50;
-        let x = 20;
+      autoTable(doc, {
+        startY: y,
+        margin: { left: marginLeft, right: marginRight },
+        head: [['Data', 'Descrição']],
+        body: historicoBody,
+        styles: { fontSize: 10, cellWidth: 'wrap' },
+        columnStyles: {
+          0: { cellWidth: 30 },
+          1: { cellWidth: pageWidth - marginLeft - marginRight - 35 },
+        },
+        headStyles: { fillColor: [150, 150, 150] },
+        didAddPage: () => {
+          renderHeader();
+        }
+      });
 
-        for (let img of this.order.images) {
+      y = doc.lastAutoTable.finalY + 10;
+
+      // ==================== IMAGENS =========================================
+      if (this.order.images?.length) {
+        doc.setFontSize(14).setFont('helvetica', 'bold');
+        doc.text('Imagens da OS', marginLeft, y);
+        y += 10;
+
+        const imgSize = 55;
+        let x = marginLeft;
+
+        for (const imgUrl of this.order.images) {
+
+          // Quebra de página automática
+          if (y + imgSize > pageHeight - 20) {
+            doc.addPage();
+            renderHeader();
+            x = marginLeft;
+            y = marginTop + 30;
+          }
+
           try {
-            const base64 = await this.getBase64FromUrl(img);
-            doc.addImage(base64, 'JPEG', x, y, imgSize, imgSize);
-            x += imgSize + 10;
-            if (x + imgSize > pageWidth) {
-              x = 20;
-              y += imgSize + 10;
-            }
+            const imgBase64 = await this.getBase64FromUrl(imgUrl);
+            doc.addImage(imgBase64, 'JPEG', x, y, imgSize, imgSize);
           } catch (e) {
             console.error('Erro ao carregar imagem:', e);
           }
+
+          x += imgSize + 10;
+
+          // Quebra horizontal
+          if (x + imgSize > pageWidth - marginRight) {
+            x = marginLeft;
+            y += imgSize + 10;
+          }
         }
+
+        y += imgSize + 10;
       }
 
-      // Rodapé com data
+      // ==================== FOOTER ==========================================
       const today = new Date().toLocaleDateString('pt-BR');
-      doc.setFontSize(10);
-      doc.text(`Emitido em: ${today}`, 20, pageHeight - 10);
+      doc.setFontSize(10).setFont('helvetica', 'italic');
+      doc.text(`Emitido em: ${today}`, marginLeft, pageHeight - 10);
 
-      // Abre em nova aba
+      // ==================== ABRIR EM NOVA ABA ==============================
       const blob = doc.output('blob');
       const url = URL.createObjectURL(blob);
       window.open(url);
-    },
+    }
+
+
   },
 };
 </script>

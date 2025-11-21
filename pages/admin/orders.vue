@@ -151,7 +151,7 @@
             <b-button class="mt-3" size="sm" variant="secondary" @click="addService">Adicionar serviço</b-button>
           </div>
 
-          <b-form-group label="Upload de imagens (até 4)">
+          <b-form-group label="Upload de imagens (até 10)">
             <b-form-file multiple accept="image/*" @change="handleFiles"></b-form-file>
             <div class="mt-2 d-flex flex-wrap">
               <div v-for="(img, idx) in files" :key="idx" class="position-relative mr-2 mb-2">
@@ -243,7 +243,7 @@ export default {
       filters: {
         dateRange: 'today',
         status: 'all',
-        client_id: null, // NOVO FILTRO POR CLIENTE
+        client_id: null, 
       },
       statusOptions: [
         { value: 'all', text: 'Todos' },
@@ -328,7 +328,6 @@ export default {
       }, 0);
     },
 
-    // NOVO: Opções para o filtro de clientes
     clientFilterOptions() {
       return [
         { value: null, text: 'Todos os clientes' },
@@ -390,6 +389,8 @@ export default {
       try {
         this.loading = true;
         this.allOrders = await orderService.listAll();
+
+        console.log('all orders', this.allOrders)
         this.applyFilters();
       } catch (error) {
         console.error('Erro ao carregar orders:', error);
@@ -404,7 +405,7 @@ export default {
     },
 
     applyFilters() {
-      let filtered = this.allOrders.filter(o => !o.deleted_at);
+      let filtered = this.allOrders.filter(o => !o.is_deleted);
 
       // FILTRO STATUS
       if (this.filters.status !== 'all') {
@@ -650,8 +651,8 @@ export default {
         description: item.description,
         services: this.formatExistingValues(item.services),
         status: item.status,
-        history: item.history || [],   // ← carrega do banco
-        history_text: ''               // ← limpa o campo
+        history: item.history || [],   
+        history_text: ''              
       };
 
       this.files = (item.images || []).map((url) => ({
@@ -711,8 +712,8 @@ export default {
 
     handleFiles(event) {
       const selected = Array.from(event.target.files);
-      if (selected.length + this.files.length > 4) {
-        this.$bvToast.toast('Você só pode enviar até 4 imagens.', {
+      if (selected.length + this.files.length > 10) {
+        this.$bvToast.toast('Você só pode enviar até 10 imagens.', {
           title: 'Erro',
           variant: 'danger',
           solid: true,

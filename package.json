@@ -21,6 +21,7 @@
     "firebase": "^9.22.0",
     "firebase-admin": "^13.6.0",
     "jspdf": "2.4.0",
+    "jspdf-autotable": "^5.0.2",
     "nuxt": "^2.15.8",
     "v-mask": "^2.3.0",
     "v-money": "^0.8.1",
