@@ -7,40 +7,42 @@
       <b-row>
         <b-col cols="12" md="3">
           <label>Filtrar por período:</label>
-          <b-form-select
-            v-model="selectedRange"
-            :options="dateRangeOptions"
-            @change="applyDateFilter"
-          />
+          <b-form-select v-model="selectedRange" :options="dateRangeOptions" @change="applyDateFilter" />
         </b-col>
       </b-row>
     </b-card>
 
     <!-- CARDS -->
-    <b-card class="p-2">
+    <b-card class="p-2" title="Resumo das Ordens de Serviço">
       <b-row>
-        <b-col cols="12" md="3">
+        <b-col cols="12" md="2">
           <div class="card-box aberta mb-2">
-            <h4>OS Abertas</h4>
+            <h4>Abertas</h4>
             <p>{{ osAbertas.length }}</p>
           </div>
         </b-col>
 
-        <b-col cols="12" md="3">
+        <b-col cols="12" md="2">
           <div class="card-box encerrada mb-2">
-            <h4>OS Encerradas</h4>
+            <h4>Finalizadas</h4>
             <p>{{ osEncerradas.length }}</p>
           </div>
         </b-col>
 
-        <b-col cols="12" md="3">
+        <b-col cols="12" md="2">
           <div class="card-box andamento mb-2">
-            <h4>Em Andamento</h4>
+            <h4>Andamento</h4>
             <p>{{ osEmAndamento.length }}</p>
           </div>
         </b-col>
 
-        <b-col cols="12" md="3">
+        <b-col cols="12" md="2">
+          <div class="card-box cancelada mb-2">
+            <h4>Canceladas</h4>
+            <p>{{ osCancelada.length }}</p>
+          </div>
+        </b-col>
+        <b-col cols="12" md="4">
           <div class="card-box total mb-2">
             <h4>Total</h4>
             <p>{{ filteredList.length }}</p>
@@ -50,22 +52,98 @@
     </b-card>
 
     <!-- GRÁFICO -->
-    <b-card class="mt-5" title="OS Aberta por mês">
+    <b-card class="my-5" title="OS Aberta por mês">
       <b-row>
         <b-col cols="12">
           <OsByMonthChart :osList="filteredList" />
         </b-col>
       </b-row>
     </b-card>
+
+    <b-card class="mt-4">
+      <h4 class="mb-3">Resumo Financeiro</h4>
+
+      <b-row>
+        <!-- Abertas -->
+        <b-col cols="12" md="3">
+          <div class="finance-box aberta">
+            <div class="label"><b-icon icon="folder-plus"></b-icon> Abertas</div>
+            <div class="value">
+              {{ totalGeral(osAbertas).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) }}
+            </div>
+          </div>
+        </b-col>
+        <!-- Em andamento -->
+        <b-col cols="12" md="3">
+          <div class="finance-box andamento">
+            <div class="label"><b-icon icon="tools"></b-icon> Em andamento</div>
+            <div class="value">
+              {{ totalGeral(osEmAndamento).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) }}
+            </div>
+          </div>
+        </b-col>
+
+
+
+        <!-- Finalizadas -->
+        <b-col cols="12" md="3">
+          <div class="finance-box encerrada">
+            <div class="label"><b-icon icon="check-circle"></b-icon> Finalizadas</div>
+            <div class="value">
+              {{ totalGeral(osEncerradas).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) }}
+            </div>
+          </div>
+        </b-col>
+
+        <!-- Canceladas -->
+        <b-col cols="12" md="3">
+          <div class="finance-box cancelada">
+            <div class="label"><b-icon icon="x-circle"></b-icon> Canceladas</div>
+            <div class="value">
+              {{ totalGeral(osCancelada).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) }}
+            </div>
+          </div>
+        </b-col>
+      </b-row>
+      <b-card class="mt-4" title="Comparativo Financeiro">
+        <b-row>
+          <b-col cols="12" md="6">
+            <BarFinanceChart :values="{
+              open: totalGeral(osAbertas),
+              progress: totalGeral(osEmAndamento),
+              done: totalGeral(osEncerradas),
+              canceled: totalGeral(osCancelada)
+            }" />
+          </b-col>
+
+          <b-col cols="12" md="6">
+            <PieFinanceChart :values="{
+              open: totalGeral(osAbertas),
+              progress: totalGeral(osEmAndamento),
+              done: totalGeral(osEncerradas),
+              canceled: totalGeral(osCancelada)
+            }" />
+          </b-col>
+        </b-row>
+      </b-card>
+
+    </b-card>
+
   </div>
 </template>
 
 <script>
 import dashboardService from "~/services/dashboardService";
 import OsByMonthChart from "./components/OsByMonthChart.vue";
+import BarFinanceChart from './components/BarFinanceChart.vue'
+import PieFinanceChart from './components/PieFinanceChart.vue'
+
 
 export default {
-  components: { OsByMonthChart },
+  components: {
+    OsByMonthChart, BarFinanceChart,
+    PieFinanceChart
+  },
 
   data() {
     return {
@@ -94,6 +172,9 @@ export default {
     },
     osEmAndamento() {
       return this.filteredList.filter(os => os.status === "in_progress");
+    },
+    osCancelada() {
+      return this.filteredList.filter(os => os.status === "canceled");
     }
   },
 
@@ -134,12 +215,32 @@ export default {
 
         return d >= start;
       });
+    },
+    totalGeral(osList) {
+      if (!Array.isArray(osList)) return 0;
+
+      return osList.reduce((accOS, os) => {
+        // ignora OS sem services
+        if (!Array.isArray(os.services)) return accOS;
+
+        const totalOS = os.services.reduce(
+          (accService, s) => accService + (Number(s.value) || 0),
+          0
+        );
+
+        return accOS + totalOS;
+      }, 0);
     }
+
   },
 
   async mounted() {
+    
     this.osList = await dashboardService.listAll();
-    this.filteredList = this.osList; // inicia sem filtro
+    this.filteredList = this.osList;
+    
+    this.selectedRange = 'today'
+    this.applyDateFilter()
   }
 };
 </script>
@@ -159,7 +260,7 @@ export default {
 }
 
 .aberta {
-  background: #938700;
+  background: #ffbb00;
 }
 
 .andamento {
@@ -170,6 +271,11 @@ export default {
 .encerrada {
   background: #00E396;
 }
+
+.cancelada {
+  background: #ff4949;
+}
+
 
 .total {
   background: #775DD0;
@@ -184,5 +290,47 @@ export default {
   margin: 10px 0 0;
   font-size: 30px;
   font-weight: bold;
+}
+
+.finance-box {
+  padding: 18px 20px;
+  border-radius: 12px;
+  color: #fff;
+  margin-bottom: 20px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.finance-box .label {
+  font-size: 15px;
+  opacity: 0.9;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.finance-box .value {
+  font-size: 26px;
+  font-weight: bold;
+  margin-top: 4px;
+}
+
+/* Cores harmonizadas */
+.finance-box.andamento {
+  background: #0a4878;
+}
+
+.finance-box.aberta {
+  background: #ffbb00;
+}
+
+.finance-box.encerrada {
+  background: #00c983;
+}
+
+.finance-box.cancelada {
+  background: #ff4949;
 }
 </style>

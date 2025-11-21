@@ -64,7 +64,10 @@ export default {
 
   async mounted() {
     const uid = this.$store.state.user.currentUser.uid;
-    this.orders = await orderService.listByUser(uid);
+    let getOrders = await orderService.listByUser(uid);
+
+    this.orders = getOrders.filter(o => !o.is_deleted);
+
   },
 
   methods: {

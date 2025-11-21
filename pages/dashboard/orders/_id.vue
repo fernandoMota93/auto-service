@@ -5,6 +5,9 @@
         <div>
           <h4>{{ companyName }}</h4>
           <h5>Ordem de Serviço #{{ orderId ? orderId : id }}</h5>
+          <b-button v-if="currentUser.role === 'admin'" variant="info" @click="sendWhatsapp">
+            Enviar orçamento
+          </b-button>
         </div>
         <b-button variant="success" @click="generatePDF">
           <i class="fas fa-file-pdf"> <b-icon icon="printer" /></i>
@@ -116,15 +119,20 @@ export default {
       vehicleName: '',
       selectedImage: null,
       companyName: 'Grilo Auto Service',
+      client: {},
     };
   },
   computed: {
     orderId() {
       return this.$route.params.id;
     },
+    currentUser() {
+      return this.$store.state.user.profile
+    }
   },
   async mounted() {
     await this.loadOrder();
+    console.log('user', this.$store.state)
   },
   methods: {
     async loadOrder() {
@@ -140,6 +148,8 @@ export default {
       this.clientName = clientDoc.exists
         ? clientDoc.data().name
         : 'Cliente não encontrado';
+
+      this.client = clientDoc.data()
 
       if (this.order.vehicle_id) {
         const vdoc = await db
@@ -180,6 +190,31 @@ export default {
       });
     },
 
+    sendWhatsapp() {
+      console.log(this.client, 'cliente')
+      const services = this.order.services || [];
+
+      // monta o texto da lista
+      const servicesText = services
+        .map(s => `• ${s.name} – *${s.value.toLocaleString('pt-BR', {
+          style: 'currency',
+          currency: 'BRL',
+        })}*`)
+        .join('\n');
+
+      const message = `Olá, ${this.client.name}!\n\nSegue o resumo dos serviços necessários para seu veículo na Grilo Auto Service:\n${this.vehicleName}\n\n-----------------\n${servicesText}\n\n*Total: ${ this.total(this.order).toLocaleString('pt-BR', {style: 'currency',currency: 'BRL',})}*\n-----------------\n\nEm caso de dúvidas, estamos à disposição!`.trim();
+
+      const encodedMessage = encodeURIComponent(message);
+      const whatsappUrl = `https://wa.me/55${this.cleanPhone(this.client.phone)}?text=${encodedMessage}`;
+      window.open(whatsappUrl, '_blank');
+    },
+
+
+    cleanPhone(phone) {
+      if (!phone) return '';
+      return phone.replace(/\D/g, '');
+    },
+
     async generatePDF() {
       const doc = new jsPDF({
         orientation: 'portrait',
@@ -217,7 +252,7 @@ export default {
 
       // Renderiza primeira página
       renderHeader();
-        doc.setTextColor('#000000');
+      doc.setTextColor('#000000');
 
 
       // ==================== BLOCO: DADOS DA OS =============================
