@@ -190,8 +190,6 @@ export default {
         this.search
       );
 
-      console.log('result', result)
-
       this.clients = result.data;
       this.totalClients = result.total;
     },

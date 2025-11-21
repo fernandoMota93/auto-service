@@ -1,6 +1,7 @@
 import { db } from "~/plugins/firebase";
 import firebase from "firebase/compat/app";
 import  imageService from "~/services/imageService";
+import { getNextOSNumber } from "~/services/osCounterService";
 
 export default {
     async listAll() {
@@ -12,15 +13,19 @@ export default {
     return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
   },
 
-  async create(order) {
+   async create(order) {
+    const os_number = await getNextOSNumber();
+
     const data = {
       ...order,
+      os_number,
       images: [],
       status: order.status || "open",
       created_at: new Date(),
       updated_at: new Date(),
       is_deleted: false,
     };
+
     const ref = await db.collection("orders").add(data);
     return { id: ref.id, ...data };
   },

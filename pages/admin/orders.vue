@@ -1,219 +1,222 @@
-<template>
-  <div>
-    <b-row>
-      <!-- Lista de Ordens -->
-      <b-col cols="12">
-        <b-card>
-          <h5>Ordens existentes</h5>
-          <b-row class="mb-3">
-            <b-col cols="12" class="text-right">
-              <b-button variant="success" @click="createOS">+ Criar Nova OS</b-button>
-            </b-col>
-          </b-row>
-          <b-row class="mb-3">
-            <!-- FILTROS -->
-            <b-col md="3" class="mb-3">
-              <b-form-select v-model="filters.dateRange" :options="dateRangeOptions"  @input="onFilter"/>
-            </b-col>
-
-            <b-col md="3" class="mb-3">
-              <b-form-select v-model="filters.status" :options="statusOptions" />
-            </b-col>
-
-            <b-col md="3" class="mb-3">
-
-              <v-select v-model="filters.client_id" :options="clientFilterOptions" label="text"
-                :reduce="(option) => option.value" placeholder="Filtrar por cliente" />
-            </b-col>
-
-            <b-col md="3" class="mb-3">
-              <b-button variant="primary" block @click="onFilter">Filtrar</b-button>
-              <b-button variant="outline-secondary" block @click="clearFilters" class="mt-1">Limpar</b-button>
-            </b-col>
-          </b-row>
-          <b-row style="max-height: 90vh; overflow-y: auto;">
-            <b-table striped small responsive show-empty :items="paginatedOrders" :fields="fields">
-              <template #empty>
-                <b-alert variant="info" show>
-                  <p class="p-1">Não existe OS para o período.</p>
-                </b-alert>
-              </template>
-              <template #cell(actions)="item">
-                <Actions @view="viewOS" @edit="editPromptOS" @delete="promptDeleteOS" @sendServiceDone="sendServiceDone"
-                  :item="item.item" />
-              </template>
-              <template #cell(client_id)="item">
-                {{ clientName(item.item.client_id) }}
-              </template>
-              <template #cell(status)="item">
-                <b-badge :variant="formatOrderStatus(item.item.status).color">
-                  {{ formatOrderStatus(item.item.status).label }}
-                </b-badge>
-              </template>
-              <template #cell(services)="item">
-                <div v-if="item.item.services && item.item.services.length">
-                  <ul class="list-unstyled mb-2">
-                    <li v-for="(s, idx) in item.item.services" :key="idx" class="d-flex justify-content-between">
-                      <span>{{ s.name }} - </span>
-                      <span>
-                        <strong>R$ {{ Number(s.value).toFixed(2) }}</strong></span>
-                      <hr />
-                    </li>
-                  </ul>
-                </div>
-              </template>
-              <template #cell(total)="item">
-                R$ {{ total(item.item).toFixed(2) }}
-              </template>
-
-              <template #cell(created_at)="item">
-                {{ formatFirebaseDate(item.item.created_at) }}
-              </template>
-            </b-table>
-          </b-row>
-
-          <!-- Contadores no final da tabela -->
-          <b-row class="mt-3 pt-3 border-top" v-if="filteredOrders.length > 0">
-            <b-col cols="12" class="d-flex justify-content-end">
-              <div class="summary-cards">
-                <b-card class="summary-card mr-2">
-                  <div class="text-center">
-                    <div class="summary-label">Total de OS</div>
-                    <div class="summary-value text-primary">
-                      {{ filteredOrders.length }}
-                    </div>
-                  </div>
-                </b-card>
-                <b-card class="summary-card">
-                  <div class="text-center">
-                    <div class="summary-label">Total dos Serviços</div>
-                    <div class="summary-value text-success">
-                      R$ {{ totalServicesValue.toFixed(2) }}
-                    </div>
-                  </div>
-                </b-card>
-              </div>
-            </b-col>
-          </b-row>
-
-          <b-pagination v-model="currentPage" :total-rows="totalOrders" :per-page="perPage" align="center" size="sm"
-            class="mt-2" @change="onPageChange" />
-          <div v-if="filteredOrders.length === 0" class="text-muted">
-            Nenhuma ordem
-          </div>
-        </b-card>
-      </b-col>
-    </b-row>
-
-    <!-- Modais (mantidos iguais) -->
-    <b-modal id="confirm-delete-modal" ref="confirmDeleteModal" title="Confirmar exclusão" ok-title="Sim"
-      cancel-title="Cancelar" @ok="confirmDeleteImage">
-      <p>Tem certeza que deseja remover esta imagem?</p>
-    </b-modal>
-
-    <b-modal id="confirm-delete-os-modal" ref="confirmDeleteOSModal" title="Confirmar exclusão" ok-title="Sim"
-      cancel-title="Cancelar" @ok="confirmDeleteOS">
-      <p>Tem certeza que deseja excluir esta OS?</p>
-    </b-modal>
-
-    <b-modal size="lg" title="Visualizar OS" v-model="viewOSModal" hide-footer>
-      <_id :id="osId" />
-    </b-modal>
-
-    <b-modal size="lg" :title="editable ? 'Editar OS' : 'Criar OS'" v-model="launchModal" hide-footer>
-      <b-card>
-        <b-form @submit.prevent="handlerSubmit">
-          <b-form-group label="Cliente">
-
-            <v-select v-model="form.client_id" :options="clientFilterOptions" label="text"
-              :reduce="(option) => option.value" placeholder="Selecione..." required />
-          </b-form-group>
-
-          <b-form-group label="Veículo (opcional)">
-            <b-form-select v-model="form.vehicle_id" :options="vehicleOptions" />
-          </b-form-group>
-
-          <b-form-group label="Descrição">
-            <b-form-textarea v-model="form.description" rows="3" required />
-          </b-form-group>
-
-          <b-form-group label="Status da OS">
-            <b-form-select v-model="form.status" :options="statusOptions.filter(s => s.value !== 'all')" />
-          </b-form-group>
-
-          <div>
-            <h6>Serviços</h6>
-            <div v-for="(s, idx) in form.services" :key="idx" class="d-flex mb-2 align-items-center">
-              <b-form-input v-model="s.name" placeholder="Serviço" class="mr-2" required />
-              <b-form-input v-model="s.value" placeholder="Valor" class="mr-2 input-money" v-money="moneyConfig" />
-              <b-button size="sm" variant="danger" @click="removeService(idx)">X</b-button>
-            </div>
-            <b-button class="mt-3" size="sm" variant="secondary" @click="addService">Adicionar serviço</b-button>
-          </div>
-
-          <b-form-group label="Upload de imagens (até 10)">
-            <b-form-file multiple accept="image/*" @change="handleFiles"></b-form-file>
-            <div class="mt-2 d-flex flex-wrap">
-              <div v-for="(img, idx) in files" :key="idx" class="position-relative mr-2 mb-2">
-                <b-img :src="img.preview || img.url" thumbnail fluid style="max-width: 100px" />
-                <b-button size="sm" variant="danger" class="position-absolute"
-                  style="top: 2px; right: 2px; padding: 0 4px" @click="removeFile(idx)">
-                  X
-                </b-button>
-              </div>
-            </div>
-          </b-form-group>
-
-
-          <div v-if="editable" class="mb-2">
-            <hr>
-            <h5>HISTÓRICO</h5>
-            <b-form-group label="Adicionar atualização ao histórico">
-              <b-form-textarea v-model="form.history_text" placeholder="Ex.: Aguardando peça X..." rows="3"
-                no-resize></b-form-textarea>
-            </b-form-group>
-          </div>
-          <b-table :items="form.history" class="mt-4" show-empty striped
-            :fields="[{ key: 'created_at', label: 'Data' }, { key: 'text', label: 'Descrição' }]" small>
-            <template #cell(created_at)="data">
-              {{ formatFirebaseDate(data.item.created_at) }}
-            </template>
-            <template #empty>
-              <b-alert variant="info" show>
-                <p class="p-1">Sem registro de histórico.</p>
-              </b-alert>
-            </template>
-          </b-table>
-
-          <b-button type="submit" variant="primary" :disabled="isSubmitting">
-            <span v-if="isSubmitting">
-              <b-spinner small class="mr-1"></b-spinner>
-              Aguarde...
-            </span>
-            <span v-else>
-              {{ editable ? 'Atualizar' : 'Criar OS' }}
-            </span>
-          </b-button>
-        </b-form>
-      </b-card>
-    </b-modal>
-
-    <b-modal title="Atenção" v-model="noPhoneFoundModal" hide-footer>
+  <template>
+    <div>
       <b-row>
-        <b-col cols="12" class="text-center">
-          <p>O cliente não tem telefone configurado!</p>
-        </b-col>
+        <!-- Lista de Ordens -->
+        <b-col cols="12">
+          <b-card>
+            <h5>Ordens existentes</h5>
+            <b-row class="mb-3">
+              <b-col cols="12" class="text-right">
+                <b-button variant="success" @click="createOS">+ Criar Nova OS</b-button>
+              </b-col>
+            </b-row>
+            <b-row class="mb-3">
+              <!-- FILTROS -->
+              <b-col md="3" class="mb-3">
+                <b-form-select v-model="filters.dateRange" :options="dateRangeOptions" @input="onFilter" />
+              </b-col>
 
-        <b-col cols="12" class="text-center">
-          <b-button variant="primary" tag="nuxt-link" to="/admin/clients">
-            Corrigir
-          </b-button>
+              <b-col md="3" class="mb-3">
+                <b-form-select v-model="filters.status" :options="statusOptions" />
+              </b-col>
+
+              <b-col md="3" class="mb-3">
+
+                <v-select v-model="filters.client_id" :options="clientFilterOptions" label="text"
+                  :reduce="(option) => option.value" placeholder="Filtrar por cliente" />
+              </b-col>
+
+              <b-col md="3" class="mb-3">
+                <b-button variant="primary" block @click="onFilter">Filtrar</b-button>
+                <b-button variant="outline-secondary" block @click="clearFilters" class="mt-1">Limpar</b-button>
+              </b-col>
+            </b-row>
+            <b-row style="max-height: 90vh; overflow-y: auto;">
+              <b-table striped small responsive show-empty :items="paginatedOrders" :fields="fields">
+                <template #empty>
+                  <b-alert variant="info" show>
+                    <p class="p-1">Não existe OS para o período.</p>
+                  </b-alert>
+                </template>
+                <template #cell(actions)="item">
+                  <Actions @view="viewOS" @edit="editPromptOS" @delete="promptDeleteOS"
+                    @sendServiceDone="sendServiceDone" :item="item.item" />
+                </template>
+                <template #cell(client_id)="item">
+                  {{ clientName(item.item.client_id) }}
+                </template>
+                <template #cell(status)="item">
+                  <b-badge :variant="formatOrderStatus(item.item.status).color">
+                    {{ formatOrderStatus(item.item.status).label }}
+                  </b-badge>
+                </template>
+                <template #cell(os_number)="item">
+                  {{ item.item.os_number }}
+                </template>
+                <template #cell(services)="item">
+                  <div v-if="item.item.services && item.item.services.length">
+                    <ul class="list-unstyled mb-2">
+                      <li v-for="(s, idx) in item.item.services" :key="idx" class="d-flex justify-content-between">
+                        <span>{{ s.name }} - </span>
+                        <span>
+                          <strong>R$ {{ Number(s.value).toFixed(2) }}</strong></span>
+                        <hr />
+                      </li>
+                    </ul>
+                  </div>
+                </template>
+                <template #cell(total)="item">
+                  R$ {{ total(item.item).toFixed(2) }}
+                </template>
+
+                <template #cell(created_at)="item">
+                  {{ formatFirebaseDate(item.item.created_at) }}
+                </template>
+              </b-table>
+            </b-row>
+
+            <!-- Contadores no final da tabela -->
+            <b-row class="mt-3 pt-3 border-top" v-if="filteredOrders.length > 0">
+              <b-col cols="12" class="d-flex justify-content-end">
+                <div class="summary-cards">
+                  <b-card class="summary-card mr-2">
+                    <div class="text-center">
+                      <div class="summary-label">Total de OS</div>
+                      <div class="summary-value text-primary">
+                        {{ filteredOrders.length }}
+                      </div>
+                    </div>
+                  </b-card>
+                  <b-card class="summary-card">
+                    <div class="text-center">
+                      <div class="summary-label">Total dos Serviços</div>
+                      <div class="summary-value text-success">
+                        R$ {{ totalServicesValue.toFixed(2) }}
+                      </div>
+                    </div>
+                  </b-card>
+                </div>
+              </b-col>
+            </b-row>
+
+            <b-pagination v-model="currentPage" :total-rows="totalOrders" :per-page="perPage" align="center" size="sm"
+              class="mt-2" @change="onPageChange" />
+            <div v-if="filteredOrders.length === 0" class="text-muted">
+              Nenhuma ordem
+            </div>
+          </b-card>
         </b-col>
       </b-row>
-    </b-modal>
 
-  </div>
-</template>
+      <!-- Modais (mantidos iguais) -->
+      <b-modal id="confirm-delete-modal" ref="confirmDeleteModal" title="Confirmar exclusão" ok-title="Sim"
+        cancel-title="Cancelar" @ok="confirmDeleteImage">
+        <p>Tem certeza que deseja remover esta imagem?</p>
+      </b-modal>
+
+      <b-modal id="confirm-delete-os-modal" ref="confirmDeleteOSModal" title="Confirmar exclusão" ok-title="Sim"
+        cancel-title="Cancelar" @ok="confirmDeleteOS">
+        <p>Tem certeza que deseja excluir esta OS?</p>
+      </b-modal>
+
+      <b-modal size="lg" title="Visualizar OS" v-model="viewOSModal" hide-footer>
+        <_id :id="osId" />
+      </b-modal>
+
+      <b-modal size="lg" :title="editable ? 'Editar OS' : 'Criar OS'" v-model="launchModal" hide-footer>
+        <b-card>
+          <b-form @submit.prevent="handlerSubmit">
+            <b-form-group label="Cliente">
+
+              <v-select v-model="form.client_id" :options="clientFilterOptions" label="text"
+                :reduce="(option) => option.value" placeholder="Selecione..." required />
+            </b-form-group>
+
+            <b-form-group label="Veículo (opcional)">
+              <b-form-select v-model="form.vehicle_id" :options="vehicleOptions" />
+            </b-form-group>
+
+            <b-form-group label="Descrição">
+              <b-form-textarea v-model="form.description" rows="3" required />
+            </b-form-group>
+
+            <b-form-group label="Status da OS">
+              <b-form-select v-model="form.status" :options="statusOptions.filter(s => s.value !== 'all')" />
+            </b-form-group>
+
+            <div>
+              <h6>Serviços</h6>
+              <div v-for="(s, idx) in form.services" :key="idx" class="d-flex mb-2 align-items-center">
+                <b-form-input v-model="s.name" placeholder="Serviço" class="mr-2" required />
+                <b-form-input v-model="s.value" placeholder="Valor" class="mr-2 input-money" v-money="moneyConfig" />
+                <b-button size="sm" variant="danger" @click="removeService(idx)">X</b-button>
+              </div>
+              <b-button class="mt-3" size="sm" variant="secondary" @click="addService">Adicionar serviço</b-button>
+            </div>
+
+            <b-form-group label="Upload de imagens (até 10)">
+              <b-form-file multiple accept="image/*" @change="handleFiles"></b-form-file>
+              <div class="mt-2 d-flex flex-wrap">
+                <div v-for="(img, idx) in files" :key="idx" class="position-relative mr-2 mb-2">
+                  <b-img :src="img.preview || img.url" thumbnail fluid style="max-width: 100px" />
+                  <b-button size="sm" variant="danger" class="position-absolute"
+                    style="top: 2px; right: 2px; padding: 0 4px" @click="removeFile(idx)">
+                    X
+                  </b-button>
+                </div>
+              </div>
+            </b-form-group>
+
+
+            <div v-if="editable" class="mb-2">
+              <hr>
+              <h5>HISTÓRICO</h5>
+              <b-form-group label="Adicionar atualização ao histórico">
+                <b-form-textarea v-model="form.history_text" placeholder="Ex.: Aguardando peça X..." rows="3"
+                  no-resize></b-form-textarea>
+              </b-form-group>
+            </div>
+            <b-table :items="form.history" class="mt-4" show-empty striped
+              :fields="[{ key: 'created_at', label: 'Data' }, { key: 'text', label: 'Descrição' }]" small>
+              <template #cell(created_at)="data">
+                {{ formatFirebaseDate(data.item.created_at) }}
+              </template>
+              <template #empty>
+                <b-alert variant="info" show>
+                  <p class="p-1">Sem registro de histórico.</p>
+                </b-alert>
+              </template>
+            </b-table>
+
+            <b-button type="submit" variant="primary" :disabled="isSubmitting">
+              <span v-if="isSubmitting">
+                <b-spinner small class="mr-1"></b-spinner>
+                Aguarde...
+              </span>
+              <span v-else>
+                {{ editable ? 'Atualizar' : 'Criar OS' }}
+              </span>
+            </b-button>
+          </b-form>
+        </b-card>
+      </b-modal>
+
+      <b-modal title="Atenção" v-model="noPhoneFoundModal" hide-footer>
+        <b-row>
+          <b-col cols="12" class="text-center">
+            <p>O cliente não tem telefone configurado!</p>
+          </b-col>
+
+          <b-col cols="12" class="text-center">
+            <b-button variant="primary" tag="nuxt-link" to="/admin/clients">
+              Corrigir
+            </b-button>
+          </b-col>
+        </b-row>
+      </b-modal>
+
+    </div>
+  </template>
 
 <script>
 import { db } from '~/plugins/firebase';
@@ -226,7 +229,7 @@ import mixinShared from '../../mixins/mixinShared';
 import _id from '../dashboard/orders/_id.vue';
 import vSelect from 'vue-select';
 import 'vue-select/dist/vue-select.css';
-import {startOfToday, subDays, subMonths, subYears } from 'date-fns'
+import { startOfToday, subDays, subMonths, subYears } from 'date-fns'
 
 
 export default {
@@ -243,7 +246,7 @@ export default {
       filters: {
         dateRange: 'today',
         status: 'all',
-        client_id: null, 
+        client_id: null,
       },
       statusOptions: [
         { value: 'all', text: 'Todos' },
@@ -288,6 +291,7 @@ export default {
       imageOrderId: null,
       fields: [
         { key: 'actions', label: 'Ações' },
+        { key: 'os_number', label: 'Nº OS' },
         { key: 'client_id', label: 'Cliente' },
         { key: 'description', label: 'Descrição' },
         { key: 'status', label: 'Estado da OS' },
@@ -341,7 +345,13 @@ export default {
 
   async mounted() {
     const snap = await db.collection('users').get();
-    this.clients = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+    let clients = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+
+    this.clients = clients.filter(c => !c.is_deleted);
+
+
+
+
     this.clientOptions = this.clients.map((c) => ({
       value: c.id,
       text: `${c.name} (${c.email})`,
@@ -651,8 +661,8 @@ export default {
         description: item.description,
         services: this.formatExistingValues(item.services),
         status: item.status,
-        history: item.history || [],   
-        history_text: ''              
+        history: item.history || [],
+        history_text: ''
       };
 
       this.files = (item.images || []).map((url) => ({
@@ -856,16 +866,16 @@ export default {
 
       const message = `Olá ${name}!
 
-        O Serviço do carro está pronto!
+          O Serviço do carro está pronto!
 
-        *Serviço:* ${description}
-        *Veja os detalhes:* ${platformUrl}
+          *Serviço:* ${description}
+          *Veja os detalhes:* ${platformUrl}
 
-        *Instruções:*
-        1. Acesse o link acima
-        2. Use seu email e a senha fornecida
+          *Instruções:*
+          1. Acesse o link acima
+          2. Use seu email e a senha fornecida
 
-        Em caso de dúvidas, estamos à disposição!`;
+          Em caso de dúvidas, estamos à disposição!`;
 
       const encodedMessage = encodeURIComponent(message);
       const whatsappUrl = `https://wa.me/55${this.cleanPhone(phone)}?text=${encodedMessage}`;
@@ -888,7 +898,7 @@ export default {
       doc.setFontSize(16);
       doc.text('Grilo Auto Service', 40, 15);
       doc.setFontSize(12);
-      doc.text(`Ordem de Serviço #${o.id}`, 40, 20);
+      doc.text(`Ordem de Serviço #${o.id} - ${o.os_number}`, 40, 20);
 
       let y = 50;
       doc.setFontSize(11);

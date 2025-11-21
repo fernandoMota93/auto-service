@@ -4,7 +4,7 @@
       <div class="d-flex justify-content-between align-items-center mb-3">
         <div>
           <h4>{{ companyName }}</h4>
-          <h5>Ordem de Serviço #{{ orderId ? orderId : id }}</h5>
+          <h5>Ordem de Serviço #{{ orderId ? orderId : id }} {{ order && order.os_number ? ' ('+order.os_number+')' : '(S/Nr)' }}</h5>
           <b-button v-if="currentUser.role === 'admin'" variant="info" @click="sendWhatsapp">
             Enviar orçamento
           </b-button>
@@ -244,7 +244,7 @@ export default {
 
         doc.setFontSize(13).setFont('helvetica', 'normal');
         doc.text(
-          `Ordem de Serviço #${this.orderId ? this.orderId : this.id}`,
+          `Ordem de Serviço #${this.orderId ? this.orderId : this.id} (${this.order?.os_number || 'S/Nr'})`,
           pageWidth - 150,
           20
         );
