@@ -36,13 +36,20 @@
           </div>
         </b-col>
 
+                <b-col cols="12" md="2">
+          <div class="card-box espera mb-2">
+            <h4>Em espera</h4>
+            <p>{{ osEspera.length }}</p>
+          </div>
+        </b-col>
+
         <b-col cols="12" md="2">
           <div class="card-box cancelada mb-2">
             <h4>Canceladas</h4>
             <p>{{ osCancelada.length }}</p>
           </div>
         </b-col>
-        <b-col cols="12" md="4">
+        <b-col cols="12" md="2">
           <div class="card-box total mb-2">
             <h4>Total</h4>
             <p>{{ filteredList.length }}</p>
@@ -65,7 +72,7 @@
 
       <b-row>
         <!-- Abertas -->
-        <b-col cols="12" md="3">
+        <b-col cols="12" md="4">
           <div class="finance-box aberta">
             <div class="label"><b-icon icon="folder-plus"></b-icon> Abertas</div>
             <div class="value">
@@ -74,7 +81,7 @@
           </div>
         </b-col>
         <!-- Em andamento -->
-        <b-col cols="12" md="3">
+        <b-col cols="12" md="4">
           <div class="finance-box andamento">
             <div class="label"><b-icon icon="tools"></b-icon> Em andamento</div>
             <div class="value">
@@ -86,7 +93,7 @@
 
 
         <!-- Finalizadas -->
-        <b-col cols="12" md="3">
+        <b-col cols="12" md="4">
           <div class="finance-box encerrada">
             <div class="label"><b-icon icon="check-circle"></b-icon> Finalizadas</div>
             <div class="value">
@@ -96,7 +103,16 @@
         </b-col>
 
         <!-- Canceladas -->
-        <b-col cols="12" md="3">
+        <b-col cols="12" md="4">
+          <div class="finance-box espera">
+            <div class="label"><b-icon icon="x-circle"></b-icon> Em Espera</div>
+            <div class="value">
+              {{ totalGeral(osEspera).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) }}
+            </div>
+          </div>
+        </b-col>
+          <!-- Canceladas -->
+        <b-col cols="12" md="4">
           <div class="finance-box cancelada">
             <div class="label"><b-icon icon="x-circle"></b-icon> Canceladas</div>
             <div class="value">
@@ -175,6 +191,9 @@ export default {
     },
     osCancelada() {
       return this.filteredList.filter(os => os.status === "canceled");
+    },
+    osEspera() {
+      return this.filteredList.filter(os => os.status === "on_hold");
     }
   },
 
@@ -206,7 +225,10 @@ export default {
           break;
       }
 
-      this.filteredList = this.osList.filter(os => {
+      let filtered = this.osList.filter(o => !o.is_deleted);
+
+
+      this.filteredList = filtered.filter(os => {
         if (!os.created_at) return false;
 
         const d = os.created_at.toDate
@@ -235,11 +257,11 @@ export default {
   },
 
   async mounted() {
-    
+
     this.osList = await dashboardService.listAll();
-    this.filteredList = this.osList;
     
-    this.selectedRange = 'today'
+    this.filteredList = this.osList;
+    this.selectedRange = 'last7'
     this.applyDateFilter()
   }
 };
@@ -276,7 +298,9 @@ export default {
   background: #ff4949;
 }
 
-
+.espera {
+  background: #5f5f5f;
+}
 .total {
   background: #775DD0;
 }
