@@ -3,7 +3,7 @@
       <b-row>
         <!-- Lista de Ordens -->
         <b-col cols="12">
-          <b-card>
+          <b-card :bg-variant="isDarkMode ? 'dark' : 'light'">
             <h5>Ordens existentes</h5>
             <b-row class="mb-3">
               <b-col cols="12" class="text-right">
@@ -32,7 +32,7 @@
               </b-col>
             </b-row>
             <b-row style="max-height: 90vh; overflow-y: auto;">
-              <b-table striped small responsive show-empty :items="paginatedOrders" :fields="fields">
+              <b-table striped small responsive show-empty :items="paginatedOrders" :fields="fields" :dark="isDarkMode ? true : false">
                 <template #empty>
                   <b-alert variant="info" show>
                     <p class="p-1">Não existe OS para o período.</p>
@@ -123,7 +123,7 @@
         <_id :id="osId" />
       </b-modal>
 
-      <b-modal size="lg" :title="editable ? 'Editar OS' : 'Criar OS'" v-model="launchModal" hide-footer>
+      <b-modal  size="lg" :title="editable ? 'Editar OS' : 'Criar OS'" v-model="launchModal" hide-footer>
         <b-card>
           <b-form @submit.prevent="handlerSubmit">
             <b-form-group label="Cliente">
@@ -341,6 +341,9 @@ export default {
       return this.paginatedOrders.reduce((total, order) => {
         return total + this.total(order);
       }, 0);
+    },
+    isDarkMode() {
+      return this.$store.state.user.darkMode
     },
 
     clientFilterOptions() {

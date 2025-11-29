@@ -6,6 +6,237 @@ $theme-colors: (
   "primary": $primary,
 );
 
+/* -------------------------------------------------------------
+   DARK MODE
+   ------------------------------------------------------------- */
+
+body.dark-mode {
+  background-color: #343a40 !important;
+  color: #f1f1f1 !important;
+}
+
+/* Transições suaves */
+body, .sidebar, .navbar, .main, .footer, .card, .b-card, .modal-content {
+  transition: background-color 0.25s ease, color 0.25s ease, border-color 0.25s ease;
+}
+
+/* -------------------------------------------------------------
+   SIDEBAR
+   ------------------------------------------------------------- */
+body.dark-mode .sidebar {
+  background: #1e1e1e !important;
+  color: #fff !important;
+}
+
+body.dark-mode .menu-item {
+  color: #ddd !important;
+}
+
+body.dark-mode .menu-item:hover {
+  background: #2b2b2b !important;
+  color: #ffffff !important;
+}
+
+body.dark-mode .menu-item.active {
+  background: #ffffff !important;
+  color: #2d2d2d !important;
+}
+
+/* -------------------------------------------------------------
+   NAVBAR
+   ------------------------------------------------------------- */
+body.dark-mode .navbar {
+  background: #343a40 !important;
+  color: #fff !important;
+}
+
+body.dark-mode .navbar .brand,
+body.dark-mode .navbar-brand {
+  color: #fff !important;
+}
+
+/* -------------------------------------------------------------
+   CARDS
+   ------------------------------------------------------------- */
+body.dark-mode .card,
+body.dark-mode .b-card {
+  background-color: #1e1e1e !important;
+  color: #eee !important;
+  border-color: #333 !important;
+}
+
+/* -------------------------------------------------------------
+   TABELAS (b-table, table)
+   ------------------------------------------------------------- */
+body.dark-mode .table {
+  background-color: #1e1e1e !important;
+  color: #eee !important;
+}
+
+body.dark-mode .table th,
+body.dark-mode .table td {
+  color: #ddd !important;
+  border-color: #333 !important;
+}
+
+body.dark-mode .table-striped tbody tr:nth-of-type(odd) {
+  background-color: #2a2a2a !important;
+}
+
+body.dark-mode .table-hover tbody tr:hover {
+  background-color: #3a3a3a !important;
+}
+
+/* -------------------------------------------------------------
+   INPUTS / FORMULÁRIOS
+   ------------------------------------------------------------- */
+body.dark-mode .form-control,
+body.dark-mode .custom-select,
+body.dark-mode .b-form-input,
+body.dark-mode input,
+body.dark-mode select {
+  background-color: #1f1f1f !important;
+  color: #f1f1f1 !important;
+  border-color: #555 !important;
+}
+
+body.dark-mode .form-control:focus,
+body.dark-mode .custom-select:focus {
+  background-color: #262626 !important;
+  color: #fff !important;
+  border-color: #888 !important;
+}
+
+/* Labels */
+body.dark-mode label,
+body.dark-mode .b-form-group label {
+  color: #f1f1f1 !important;
+}
+
+/* -------------------------------------------------------------
+   DROPDOWN
+   ------------------------------------------------------------- */
+body.dark-mode .dropdown-menu {
+  background-color: #1e1e1e !important;
+  color: #eee !important;
+  border-color: #333 !important;
+}
+
+body.dark-mode .dropdown-item {
+  color: #ddd !important;
+}
+
+body.dark-mode .dropdown-item:hover {
+  background-color: #2b2b2b !important;
+}
+
+/* -------------------------------------------------------------
+   MODAIS (b-modal)
+   ------------------------------------------------------------- */
+body.dark-mode .modal-content {
+  background-color: #1e1e1e !important;
+  color: #f1f1f1 !important;
+  border-color: #333 !important;
+}
+
+body.dark-mode .modal-header,
+body.dark-mode .modal-footer {
+  border-color: #333 !important;
+}
+
+body.dark-mode .modal-title {
+  color: #fff !important;
+}
+
+body.dark-mode .close,
+body.dark-mode .modal-header .close {
+  color: #fff !important;
+  opacity: 1 !important;
+}
+
+/* Backdrop */
+body.dark-mode .modal-backdrop {
+  background-color: rgba(0, 0, 0, 0.8) !important;
+}
+
+/* -------------------------------------------------------------
+   CONTEÚDO PRINCIPAL
+   ------------------------------------------------------------- */
+body.dark-mode .main {
+  background: #343a40 !important;
+}
+
+/* Classes utilitárias */
+body.dark-mode .text-primary {
+  color: #ffffff !important;
+}
+
+/* Forçar bg-dark real */
+.bg-dark {
+  background: #343a40 !important;
+}
+
+/* -------------------------------------------------------------
+   VUE-SELECT (v3) - DARK MODE
+   ------------------------------------------------------------- */
+
+body.dark-mode .v-select {
+  --vs-border-color: #555 !important;
+  --vs-border-radius: 4px;
+  --vs-dropdown-max-height: 240px;
+  --vs-controls-color: #fff !important;
+  --vs-selected-color: #fff !important;
+  --vs-selected-bg: #1e1e1e !important;
+  --vs-placeholder-color: #aaa !important;
+  --vs-dropdown-option-bg: #1e1e1e !important;
+  --vs-option-color: #ddd !important;
+  --vs-option-hover-bg: #2b2b2b !important;
+  --vs-option-hover-color: #fff !important;
+  --vs-clear-btn-color: #ccc !important;
+}
+
+body.dark-mode .v-select .vs__dropdown-toggle {
+  background: #1e1e1e !important;
+  border-color: #555 !important;
+  color: #fff !important;
+}
+
+body.dark-mode .v-select .vs__selected {
+  color: #fff !important;
+}
+
+body.dark-mode .v-select .vs__dropdown-menu {
+  background: #1e1e1e !important;
+  border-color: #444 !important;
+}
+
+body.dark-mode .v-select .vs__dropdown-option {
+  background: #1e1e1e !important;
+  color: #ddd !important;
+}
+
+body.dark-mode .v-select .vs__dropdown-option--highlight {
+  background: #2b2b2b !important;
+  color: #fff !important;
+}
+
+body.dark-mode .v-select .vs__search,
+body.dark-mode .v-select input {
+  background: transparent !important;
+  color: #fff !important;
+}
+
+body.dark-mode .v-select .vs__clear,
+body.dark-mode .v-select .vs__open-indicator {
+  fill: #fff !important;
+}
+
+body.dark-mode .v-select .vs__no-options {
+  color: #aaa !important;
+}
+
+
+
 // 3) Importar Bootstrap (SCSS)
 @import "~bootstrap/scss/bootstrap.scss";
 

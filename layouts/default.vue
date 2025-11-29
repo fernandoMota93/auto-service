@@ -2,8 +2,9 @@
   <div class="app-layout d-flex flex-column h-100">
     <div class="flex-grow-1 d-flex">
       <!-- Sidebar -->
-      <b-sidebar id="sidebar" shadow bg-variant="light" text-variant="dark" :visible.sync="sidebarVisible"
-        :backdrop="isMobile" class="sidebar border-right">
+      <b-sidebar id="sidebar" shadow :bg-variant="isDarkMode ? 'dark' : 'light'"
+        :text-variant="isDarkMode ? 'light' : 'dark'" :visible.sync="sidebarVisible" :backdrop="isMobile"
+        class="sidebar border-right">
         <div class="p-3 d-flex flex-column h-100">
           <!-- Logo / Nome -->
           <div class="mb-4 text-center sidebar-logo-box">
@@ -36,7 +37,8 @@
       <!-- Main content -->
       <div class="main flex-fill d-flex flex-column">
         <!-- Navbar superior -->
-        <b-navbar type="light" variant="light" class="border-bottom shadow-sm">
+        <b-navbar :type="isDarkMode ? 'light' : 'dark'" :variant="isDarkMode ? 'dark' : 'light'"
+          class="border-bottom shadow-sm">
           <b-container fluid class="d-flex justify-content-between align-items-center">
             <b-button size="sm" variant="outline-secondary" @click="toggleSidebar" class="mr-2">
               <b-icon icon="list"></b-icon>
@@ -50,6 +52,9 @@
               <span v-if="$store.state.user.profile" class="mr-2 text-muted small">
                 {{ $store.state.user.profile.name }}
               </span>
+              <b-button size="sm" variant="outline-secondary" @click="toggleDarkMode">
+                <b-icon :icon="isDarkMode ? 'brightness-high' : 'moon-fill'"></b-icon>
+              </b-button>
               <b-button size="sm" variant="link" v-if="$store.state.user.currentUser" @click="logout">
                 Logout
               </b-button>
@@ -65,7 +70,7 @@
     </div>
 
     <!-- Footer global sticky -->
-    <footer class="footer bg-light border-top text-center py-2">
+    <footer class="footer border-top text-center py-2" :class="isDarkMode ? 'bg-dark': 'bg-light'">
       <small>
         © {{ new Date().getFullYear() }} {{ appName }} - Todos os direitos
         reservados
@@ -95,16 +100,26 @@ export default {
     userRole() {
       return this.$store.state.user.profile?.role || 'user';
     },
+    isDarkMode() {
+      return this.$store.state.user.darkMode
+    },
+
   },
   mounted() {
     this.checkMobile();
     window.addEventListener('resize', this.checkMobile);
     this.setMenuByRole();
+
+    const saved = localStorage.getItem("dark-mode") === "true"
+    this.$store.dispatch("user/setDarkMode", saved)
   },
   beforeDestroy() {
     window.removeEventListener('resize', this.checkMobile);
   },
   methods: {
+    toggleDarkMode() {
+      this.$store.dispatch("user/setDarkMode", !this.isDarkMode)
+    },
     logout() {
       this.$store.dispatch('user/logout');
       this.$router.push('/');
@@ -136,7 +151,7 @@ export default {
       ];
 
       this.menu =
-        this.userRole === 'admin' ? [ ...adminMenu, ...baseMenu] : baseMenu;
+        this.userRole === 'admin' ? [...adminMenu, ...baseMenu] : baseMenu;
     },
   },
 };

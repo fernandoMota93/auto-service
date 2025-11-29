@@ -12,9 +12,9 @@
 
           <b-card class="shadow-sm" style="cursor: pointer" @click="$router.push(`/dashboard/orders/${o.id}`)">
             <div class="d-flex justify-content-between align-items-center mb-2">
-              <h5 class="mb-0">OS #{{ o.id.substring(0, 6) }} {{ o && o.os_number ? ' ('+o.os_number+')' : '(S/Nr)' }}</h5>
+              <h5 class="mb-0">OS #{{ o.id.substring(0, 6) }} {{ o && o.os_number ? ' (' + o.os_number + ')' : '(S/Nr)' }}
+              </h5>
 
-             
             </div>
 
             <!-- Data -->
@@ -41,7 +41,6 @@
 
         </b-col>
       </b-row>
-
     </b-card>
   </div>
 </template>
@@ -66,6 +65,11 @@ export default {
 
     this.orders = getOrders.filter(o => !o.is_deleted);
 
+  },
+  computed: {
+    isDarkMode() {
+      return this.$store.state.user.darkMode
+    },
   },
 
   methods: {
