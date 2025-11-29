@@ -153,7 +153,7 @@ import dashboardService from "~/services/dashboardService";
 import OsByMonthChart from "./components/OsByMonthChart.vue";
 import BarFinanceChart from './components/BarFinanceChart.vue'
 import PieFinanceChart from './components/PieFinanceChart.vue'
-
+import { startOfDay, subDays, subMonths, subYears, isAfter, isEqual } from "date-fns";
 
 export default {
   components: {
@@ -198,46 +198,50 @@ export default {
   },
 
   methods: {
-    applyDateFilter() {
-      if (!this.selectedRange) {
-        this.filteredList = this.osList;
-        return;
-      }
+applyDateFilter() {
+  if (!this.selectedRange) {
+    this.filteredList = this.osList;
+    return;
+  }
 
-      const now = new Date();
-      let start = null;
+  const now = new Date();
+  let start = null;
 
-      switch (this.selectedRange) {
-        case "today":
-          start = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-          break;
-        case "last7":
-          start = new Date(now.setDate(now.getDate() - 7));
-          break;
-        case "last30":
-          start = new Date(now.setDate(now.getDate() - 30));
-          break;
-        case "last6m":
-          start = new Date(now.setMonth(now.getMonth() - 6));
-          break;
-        case "last1y":
-          start = new Date(now.setFullYear(now.getFullYear() - 1));
-          break;
-      }
+  switch (this.selectedRange) {
+    case "today":
+      start = startOfDay(now);
+      break;
 
-      let filtered = this.osList.filter(o => !o.is_deleted);
+    case "last7":
+      start = subDays(startOfDay(now), 7);
+      break;
 
+    case "last30":
+      start = subDays(startOfDay(now), 30);
+      break;
 
-      this.filteredList = filtered.filter(os => {
-        if (!os.created_at) return false;
+    case "last6m":
+      start = subMonths(startOfDay(now), 6);
+      break;
 
-        const d = os.created_at.toDate
-          ? os.created_at.toDate()
-          : new Date(os.created_at.seconds * 1000);
+    case "last1y":
+      start = subYears(startOfDay(now), 1);
+      break;
+  }
 
-        return d >= start;
-      });
-    },
+  const filtered = this.osList.filter(o => !o.is_deleted);
+
+  this.filteredList = filtered.filter(os => {
+    if (!os.created_at) return false;
+
+    const createdDate = os.created_at.toDate
+      ? os.created_at.toDate()
+      : new Date(os.created_at.seconds * 1000);
+
+    // padroniza comparação com date-fns
+    return isAfter(createdDate, start) || isEqual(createdDate, start);
+  });
+},
     totalGeral(osList) {
       if (!Array.isArray(osList)) return 0;
 

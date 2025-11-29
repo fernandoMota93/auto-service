@@ -136,6 +136,16 @@
               <b-form-select v-model="form.vehicle_id" :options="vehicleOptions" />
             </b-form-group>
 
+            <b-form-group label="Quilometragem atual">
+              <b-input-group>
+                <b-form-input v-model="form.actual_mileage" type="number" min="0" placeholder="0"></b-form-input>
+
+                <b-input-group-append>
+                  <b-input-group-text>KM</b-input-group-text>
+                </b-input-group-append>
+              </b-input-group>
+            </b-form-group>
+
             <b-form-group label="Descrição">
               <b-form-textarea v-model="form.description" rows="3" required />
             </b-form-group>
@@ -229,7 +239,7 @@ import mixinShared from '../../mixins/mixinShared';
 import _id from '../dashboard/orders/_id.vue';
 import vSelect from 'vue-select';
 import 'vue-select/dist/vue-select.css';
-import { startOfToday, subDays, subMonths, subYears } from 'date-fns'
+import { startOfToday, startOfDay, subDays, subMonths, subYears } from 'date-fns';
 
 
 export default {
@@ -284,6 +294,7 @@ export default {
         services: [{ name: '', value: 0 }],
         status: 'open',
         history_text: '',
+        actual_mileage: '',
         history: []
       },
       files: [],
@@ -350,8 +361,6 @@ export default {
     this.clients = clients.filter(c => !c.is_deleted);
 
 
-
-
     this.clientOptions = this.clients.map((c) => ({
       value: c.id,
       text: `${c.name} (${c.email})`,
@@ -363,44 +372,43 @@ export default {
   methods: {
     filterByDateRange(orderDate, range) {
       const today = startOfToday();
+      const date = startOfDay(orderDate);
 
       switch (range) {
         case 'today': {
-          return orderDate >= today;
+          return date.getTime() === today.getTime();
         }
 
         case 'last7': {
           const start = subDays(today, 7);
-          return orderDate >= start && orderDate <= today;
+          return date >= start && date <= today;
         }
 
         case 'last30': {
           const start = subDays(today, 30);
-          return orderDate >= start && orderDate <= today;
+          return date >= start && date <= today;
         }
 
         case 'last6m': {
           const start = subMonths(today, 6);
-          return orderDate >= start && orderDate <= today;
+          return date >= start && date <= today;
         }
 
         case 'last1y': {
           const start = subYears(today, 1);
-          return orderDate >= start && orderDate <= today;
+          return date >= start && date <= today;
         }
 
         default:
           return true;
       }
     },
-
     // Carrega todos os orders uma vez
     async loadAllOrders() {
       try {
         this.loading = true;
         this.allOrders = await orderService.listAll();
 
-        console.log('all orders', this.allOrders)
         this.applyFilters();
       } catch (error) {
         console.error('Erro ao carregar orders:', error);
@@ -572,12 +580,7 @@ export default {
           return;
         }
 
-        if (this.form.history_text.trim() !== '') {
-          this.form.history.push({
-            text: this.form.history_text,
-            created_at: new Date()
-          });
-        }
+
         const formData = this.prepareFormData();
 
         const updatedData = {
@@ -586,8 +589,26 @@ export default {
           description: formData.description,
           services: formData.services.filter(s => s.name),
           status: formData.status,
+          actual_mileage: formData.actual_mileage,
           history: this.form.history
         };
+
+        if (this.originalStatus !== updatedData.status) {
+          updatedData.history.push({
+            text: `Status alterado de "${this.formatOrderStatus(this.originalStatus).label}" para "${this.formatOrderStatus(updatedData.status).label}".`,
+            created_at: new Date(),
+          });
+        }
+
+
+        if (updatedData.history_text && updatedData.history_text.trim() !== "") {
+          updatedData.history.push({
+            text: updatedData.history_text.trim(),
+            created_at: new Date(),
+          });
+        }
+
+        delete updatedData.history_text;
 
         await orderService.update(this.osId, updatedData);
 
@@ -639,6 +660,7 @@ export default {
         vehicle_id: null,
         description: null,
         services: [{ name: '', value: 'R$ 0,00' }],
+        actual_mileage: '',
         status: 'open',
       };
 
@@ -661,9 +683,12 @@ export default {
         description: item.description,
         services: this.formatExistingValues(item.services),
         status: item.status,
+        actual_mileage: item.actual_mileage || 0,
         history: item.history || [],
         history_text: ''
       };
+
+      this.originalStatus = item.status;
 
       this.files = (item.images || []).map((url) => ({
         preview: url,
@@ -767,6 +792,7 @@ export default {
           user_id: formData.client_id,
           created_by: adminUid,
           status: formData.status,
+          actual_mileage: formData.actual_mileage,
           created_at: new Date(),
         };
 
@@ -905,6 +931,8 @@ export default {
       doc.text(`Cliente: ${this.clientName(o.client_id)}`, 20, y);
       y += 7;
       doc.text(`Veículo: ${o.vehicle_id || '-'}`, 20, y);
+      y += 7;
+      doc.text(`Quilometragem atual: ${o.actual_mileage || '-'}`, 20, y);
       y += 7;
       doc.text(`Descrição: ${o.description || '-'}`, 20, y);
       y += 10;

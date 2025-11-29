@@ -20,6 +20,8 @@
         <b-col md="6">
           <p><strong>Cliente:</strong> {{ clientName }}</p>
           <p><strong>Veículo:</strong> {{ vehicleName }}</p>
+          <p><strong>Quilometragem atual:</strong> {{ order && order.actual_mileage ? order.actual_mileage + ' KM' : 'Não informado' }}</p>
+
           <p>
             <strong>Status:</strong>
             <b-badge :variant="formatOrderStatus(order.status).color">{{
@@ -268,6 +270,11 @@ export default {
 
       doc.text(`Veículo: ${this.vehicleName}`, marginLeft + 5, y);
       y += 6;
+
+      
+      doc.text(`Quilometragem atual: ${this.order?.actual_mileage || '-'}`, marginLeft + 5, y);
+      y += 6;
+
 
       doc.text(`Status: ${this.formatOrderStatus(this.order.status).label}`, marginLeft + 5, y);
       y += 6;

@@ -38,6 +38,9 @@ export default {
   },
 
   async update(id, data) {
+    console.log('data', data)
+    console.log('id', id)
+
 
     await db
       .collection("orders")
