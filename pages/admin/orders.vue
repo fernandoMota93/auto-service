@@ -32,7 +32,8 @@
               </b-col>
             </b-row>
             <b-row style="max-height: 90vh; overflow-y: auto;">
-              <b-table striped small responsive show-empty :items="paginatedOrders" :fields="fields" :dark="isDarkMode ? true : false">
+              <b-table striped small responsive show-empty :items="paginatedOrders" :fields="fields"
+                :dark="isDarkMode ? true : false">
                 <template #empty>
                   <b-alert variant="info" show>
                     <p class="p-1">Não existe OS para o período.</p>
@@ -123,7 +124,7 @@
         <_id :id="osId" />
       </b-modal>
 
-      <b-modal  size="lg" :title="editable ? 'Editar OS' : 'Criar OS'" v-model="launchModal" hide-footer>
+      <b-modal size="lg" :title="editable ? 'Editar OS' : 'Criar OS'" v-model="launchModal" hide-footer>
         <b-card>
           <b-form @submit.prevent="handlerSubmit">
             <b-form-group label="Cliente">
@@ -593,7 +594,7 @@ export default {
           services: formData.services.filter(s => s.name),
           status: formData.status,
           actual_mileage: formData.actual_mileage,
-          history: this.form.history
+          history: Array.isArray(this.form.history) ? [...this.form.history] : []
         };
 
         if (this.originalStatus !== updatedData.status) {
@@ -604,14 +605,14 @@ export default {
         }
 
 
-        if (updatedData.history_text && updatedData.history_text.trim() !== "") {
+        if (this.form.history_text && this.form.history_text.trim() !== "") {
           updatedData.history.push({
-            text: updatedData.history_text.trim(),
+            text: this.form.history_text.trim(),
             created_at: new Date(),
           });
+          // limpa o campo do formulário após adicionar
+          this.form.history_text = '';
         }
-
-        delete updatedData.history_text;
 
         await orderService.update(this.osId, updatedData);
 
@@ -688,7 +689,7 @@ export default {
         status: item.status,
         actual_mileage: item.actual_mileage || 0,
         history: item.history || [],
-        history_text: ''
+        history_text: '' 
       };
 
       this.originalStatus = item.status;
@@ -699,6 +700,7 @@ export default {
         file: null,
       }));
     },
+
 
     promptDeleteOS(item) {
       this.osToDelete = item.id;
