@@ -39,7 +39,7 @@
     <!-- Ver OS -->
     <b-button v-if="type === 'client'" variant="outline-primary" size="sm" class="ml-2"
       v-b-tooltip.hover.bottom="'Ver OS'" @click="$router.push({
-        path: '/dashboard/orders/ordersClient',
+        path: '/admin/ordersClient',
         query: { uid: item.uid, admin:true }
       })">
       <b-icon icon="clipboard-data"></b-icon>
