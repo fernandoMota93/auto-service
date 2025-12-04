@@ -217,6 +217,7 @@ export default {
     },
 
     openEditModal(client) {
+      console.log(client)
       this.isEditing = true;
       this.selected = client;
       this.form = {

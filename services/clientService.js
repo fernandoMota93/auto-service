@@ -21,6 +21,7 @@ export default {
       uid: user.uid,
       email: client.email,
       name: client.name,
+      address: client.address,
       role: "user",
       active: true,
       created_at: new Date(),
