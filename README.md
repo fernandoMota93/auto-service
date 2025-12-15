@@ -106,15 +106,40 @@ Com apenas um clique, o sistema:
 
 ---
 
+## Executando
+Ambiente Node v16~18
+
+```
+npm install
+npm run dev
+```
+
+Configurar um projeto firebase pelo console http://console.firebase.google.com/
+Pegue as variaveis de projeto e substitua no .env
+Todas as variaveis do .env são fornecidas na configuração do projeto do firebase
+
+
+.env exemplo
+```
+FIREBASE_API_KEY= 
+FIREBASE_AUTH_DOMAIN= 
+FIREBASE_PROJECT_ID=
+FIREBASE_MESSAGING_SENDER_ID=
+FIREBASE_APP_ID= 
+```
+
 ## 🤝 Contribuindo
 Sugestões e PRs são bem-vindos!
 
 ---
 
+
 ## 💬 Contato
 
 **Luiz Fernando Mota Carvalho**  
 Desenvolvedor Fullstack  
-LinkedIn: https://linkedin.com/  
-GitHub: *seu usuário aqui*
+LinkedIn: [https://linkedin.com/](https://www.linkedin.com/in/luiz-fernando-mota-carvalho-82a34b8a/)
+GitHub: [*seu usuário aqui*](https://github.com/fernandoMota93/)
+
+
 
